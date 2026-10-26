@@ -3832,24 +3832,42 @@ html[dir="ltr"] .history-card-select-wrap {
 
   .creation-tabs {
     display: flex !important;
-    gap: 0.3rem !important;
-    padding: 0.35rem !important;
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    scrollbar-width: none !important;
+    flex-direction: column !important;
+    gap: 0.45rem !important;
+    padding: 0.45rem !important;
+    background: #f1f5f9 !important;
+    border-radius: var(--radius-md) !important;
     width: 100% !important;
+    overflow-x: visible !important;
+    box-sizing: border-box !important;
   }
 
-  .creation-tabs::-webkit-scrollbar {
-    display: none;
+  [data-theme="dark"] .creation-tabs {
+    background: #0d1e3d !important;
   }
 
-  .tab-btn {
-    flex: 1 !important;
-    padding: 0.45rem 0.6rem !important;
-    font-size: 0.76rem !important;
-    white-space: nowrap !important;
-    text-align: center !important;
+  .creation-tabs .tab-btn {
+    width: 100% !important;
+    flex: none !important;
+    padding: 0.65rem 0.85rem !important;
+    font-size: 0.86rem !important;
+    font-weight: 800 !important;
+    text-align: start !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    border-radius: var(--radius-sm) !important;
+    background: #ffffff !important;
+    color: var(--primary-navy) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    border: 1px solid var(--border-light) !important;
+  }
+
+  .creation-tabs .tab-btn.active {
+    background: var(--accent-orange) !important;
+    color: #ffffff !important;
+    border-color: var(--accent-orange) !important;
+    box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35) !important;
   }
 
   .creation-content {
@@ -4142,6 +4160,20 @@ html[dir="ltr"] .history-card-select-wrap {
     padding: 0.45rem 0.6rem calc(0.6rem + env(safe-area-inset-bottom, 0px)) !important;
     font-size: 0.72rem !important;
     background: rgba(15, 23, 42, 0.98) !important;
+  }
+}
+
+/* ==========================================================================
+   Foldable Devices & Fold Screens (Galaxy Fold, Pixel Fold: 520px - 880px)
+   Two cards side-by-side (كل كارتين في ريح بعض)
+   ========================================================================== */
+@media (min-width: 520px) and (max-width: 880px) {
+  .cards-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1rem !important;
+  }
+  .filter-tabs {
+    grid-template-columns: repeat(3, 1fr) !important;
   }
 }
 

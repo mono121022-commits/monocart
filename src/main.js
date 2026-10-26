@@ -569,7 +569,25 @@ async function loadHomeData(homeNumber, isUserSwitch) {
 function saveData() {
   if (!appState.homeNo) return;
   const storageKey = `monocart_data_home_${appState.homeNo}`;
-  localStorage.setItem(storageKey, JSON.stringify(appState.currentList));
+  try {
+    localStorage.setItem(storageKey, JSON.stringify(appState.currentList));
+  } catch (err) {
+    console.warn('LocalStorage quota limit reached, saving optimized state', err);
+    try {
+      // Safe fallback: save without heavy data URLs to keep list data intact
+      const safeCopy = {
+        ...appState.currentList,
+        items: appState.currentList.items.map(it => ({
+          ...it,
+          imageUrl: (it.imageUrl && it.imageUrl.startsWith('data:') && it.imageUrl.length > 50000) ? '' : it.imageUrl,
+          alternativeImageUrl: (it.alternativeImageUrl && it.alternativeImageUrl.startsWith('data:') && it.alternativeImageUrl.length > 50000) ? '' : it.alternativeImageUrl
+        }))
+      };
+      localStorage.setItem(storageKey, JSON.stringify(safeCopy));
+    } catch (e2) {
+      console.error('Storage quota exceeded completely', e2);
+    }
+  }
 
   if (supabase && appState.tablesExistInSupabase) {
     syncToSupabase();
@@ -579,7 +597,11 @@ function saveData() {
 function saveHistory() {
   if (!appState.homeNo) return;
   const historyKey = `monocart_history_home_${appState.homeNo}`;
-  localStorage.setItem(historyKey, JSON.stringify(appState.historyLists));
+  try {
+    localStorage.setItem(historyKey, JSON.stringify(appState.historyLists));
+  } catch (err) {
+    console.warn('History storage quota limit', err);
+  }
 }
 
 function applyRetentionPolicy() {
@@ -1023,8 +1045,18 @@ function setupEventListeners() {
     });
   }
 
+function normalizeItemName(str) {
+  return (str || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/ة/g, 'ه')
+    .replace(/\s+/g, ' ');
+}
+
   document.getElementById('formAddItem').addEventListener('submit', (e) => {
     e.preventDefault();
+    const btnSubmit = document.getElementById('btnAddItemSubmit');
     const qtyNumInput = document.getElementById('inputItemQtyNum');
     const unitInput = document.getElementById('inputItemUnit');
     const noteInput = document.getElementById('inputItemNote');
@@ -1037,12 +1069,42 @@ function setupEventListeners() {
     const lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
     if (lines.length === 0) return;
 
+    // Loading & Double-click Prevention Feedback
+    if (btnSubmit) {
+      btnSubmit.disabled = true;
+      btnSubmit.innerHTML = '<span>⏳ جاري الإضافة...</span>';
+    }
+
+    // Deduplication check against existing items
+    const existingNorms = new Set((appState.currentList.items || []).map(it => normalizeItemName(it.name)));
+    const linesToAdd = [];
+    const skippedDups = [];
+
+    lines.forEach(line => {
+      const norm = normalizeItemName(line);
+      if (existingNorms.has(norm)) {
+        skippedDups.push(line);
+      } else {
+        existingNorms.add(norm);
+        linesToAdd.push(line);
+      }
+    });
+
+    if (linesToAdd.length === 0) {
+      showToast(`⚠️ الصنف "${skippedDups[0]}" موجود مسبقاً في السلة!`);
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = '<span>+ إضافة للأغراض</span>';
+      }
+      return;
+    }
+
     const reqQty = parseInt(qtyNumInput.value) || 1;
     const unit = unitInput.value.trim() || 'علبة';
     const note = noteInput.value.trim() || '';
     const photoSrc = photoImg.dataset.src || '';
 
-    const newItems = lines.map((lineName, idx) => ({
+    const newItems = linesToAdd.map((lineName, idx) => ({
       id: generateId(),
       name: lineName,
       quantityRequired: reqQty,
@@ -1067,10 +1129,23 @@ function setupEventListeners() {
     document.getElementById('singlePhotoPreview').style.display = 'none';
 
     renderApp();
-    if (lines.length > 1) {
-      showToast(`🎉 تم إضافة ${lines.length} أغراض جديدة بنجاح!`);
+
+    if (btnSubmit) {
+      btnSubmit.innerHTML = '<span>✓ تم الإضافة بنجاح!</span>';
+      btnSubmit.style.background = 'var(--success-green)';
+      setTimeout(() => {
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = '<span>+ إضافة للأغراض</span>';
+        btnSubmit.style.background = '';
+      }, 700);
+    }
+
+    if (skippedDups.length > 0) {
+      showToast(`✓ تم إضافة ${linesToAdd.length} غرض (تم تجاهل ${skippedDups.length} مكرر)!`);
+    } else if (linesToAdd.length > 1) {
+      showToast(`🎉 تم إضافة ${linesToAdd.length} أغراض جديدة بنجاح!`);
     } else {
-      showToast(`✓ تمت إضافة "${lines[0]}" للسلة بنجاح!`);
+      showToast(`✓ تمت إضافة "${linesToAdd[0]}" للسلة بنجاح!`);
     }
   });
 
@@ -1344,9 +1419,41 @@ function handleBatchFiles(files) {
   });
 }
 
+function compressImage(dataUrl, maxWidth, maxHeight, quality, callback) {
+  const img = new Image();
+  img.onload = () => {
+    let { width, height } = img;
+    if (width > maxWidth || height > maxHeight) {
+      if (width / maxWidth > height / maxHeight) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      } else {
+        width = Math.round((width * maxHeight) / height);
+        height = maxHeight;
+      }
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, width, height);
+    const compressed = canvas.toDataURL('image/jpeg', quality);
+    callback(compressed);
+  };
+  img.onerror = () => {
+    callback(dataUrl);
+  };
+  img.src = dataUrl;
+}
+
 function readFileAsDataUrl(file, callback) {
   const reader = new FileReader();
-  reader.onload = (e) => callback(e.target.result);
+  reader.onload = (e) => {
+    const rawData = e.target.result;
+    compressImage(rawData, 900, 900, 0.75, (compressed) => {
+      callback(compressed);
+    });
+  };
   reader.readAsDataURL(file);
 }
 
