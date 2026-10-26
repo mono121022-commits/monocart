@@ -415,9 +415,11 @@ function setRole(role, notify = true) {
     btnReviewer.classList.remove('active');
     document.body.classList.add('mode-shopper');
     document.body.classList.remove('mode-reviewer');
-    rolePill.textContent = i18n[appState.lang].roleShopper;
-    rolePill.style.background = '#f97316';
-    rolePill.style.color = '#fff';
+    if (rolePill) {
+      rolePill.textContent = i18n[appState.lang].roleShopper;
+      rolePill.style.background = '#f97316';
+      rolePill.style.color = '#fff';
+    }
     if (creationPanel) creationPanel.style.display = 'none';
     if (btnCreateNewList) btnCreateNewList.style.display = 'none';
     if (btnFinishShopping) btnFinishShopping.style.display = 'inline-flex';
@@ -427,9 +429,11 @@ function setRole(role, notify = true) {
     btnShopper.classList.remove('active');
     document.body.classList.add('mode-reviewer');
     document.body.classList.remove('mode-shopper');
-    rolePill.textContent = i18n[appState.lang].roleReviewer;
-    rolePill.style.background = '#0f172a';
-    rolePill.style.color = '#fff';
+    if (rolePill) {
+      rolePill.textContent = i18n[appState.lang].roleReviewer;
+      rolePill.style.background = '#0f172a';
+      rolePill.style.color = '#fff';
+    }
     if (creationPanel) creationPanel.style.display = 'block';
     if (btnCreateNewList) btnCreateNewList.style.display = 'inline-flex';
     if (btnFinishShopping) btnFinishShopping.style.display = 'none';
