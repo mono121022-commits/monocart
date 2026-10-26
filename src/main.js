@@ -590,7 +590,58 @@ function saveData() {
   }
 
   if (supabase && appState.tablesExistInSupabase) {
+    debouncedSyncToSupabase();
+  }
+}
+
+let syncDebounceTimer = null;
+function debouncedSyncToSupabase() {
+  clearTimeout(syncDebounceTimer);
+  syncDebounceTimer = setTimeout(() => {
     syncToSupabase();
+  }, 400);
+}
+
+async function syncSingleItemToSupabase(item) {
+  if (!supabase || !appState.tablesExistInSupabase || !appState.homeNo || !item) return;
+  try {
+    await supabase.from('list_items').upsert({
+      id: item.id,
+      home_no: appState.homeNo,
+      list_id: appState.currentList.id,
+      name: item.name,
+      quantity_required: item.quantityRequired || 1,
+      quantity_found: item.quantityFound || 0,
+      unit: item.unit || '',
+      status: item.status,
+      note: item.note || '',
+      image_url: item.imageUrl || '',
+      alternative_image_url: item.alternativeImageUrl || ''
+    });
+  } catch (err) {
+    console.warn('Single item sync error', err);
+  }
+}
+
+async function syncBatchToSupabase(newItems) {
+  if (!supabase || !appState.tablesExistInSupabase || !appState.homeNo || !newItems || newItems.length === 0) return;
+  try {
+    const itemsPayload = newItems.map(it => ({
+      id: it.id,
+      home_no: appState.homeNo,
+      list_id: appState.currentList.id,
+      name: it.name,
+      quantity_required: it.quantityRequired || 1,
+      quantity_found: it.quantityFound || 0,
+      unit: it.unit || '',
+      status: it.status,
+      note: it.note || '',
+      image_url: it.imageUrl || '',
+      alternative_image_url: it.alternativeImageUrl || ''
+    }));
+    await supabase.from('list_items').upsert(itemsPayload);
+  } catch (err) {
+    console.error('Batch sync error', err);
   }
 }
 
@@ -1159,6 +1210,14 @@ function normalizeItemName(str) {
         img.src = dataUrl;
         img.dataset.src = dataUrl;
         preview.style.display = 'block';
+
+        // Auto-fill item name from photo filename if empty
+        if (!nameInput.value.trim()) {
+          const cleanName = file.name.replace(/\.[^/.]+$/, '').trim();
+          if (cleanName && !cleanName.includes('WhatsApp')) {
+            nameInput.value = cleanName;
+          }
+        }
       });
     }
   });
@@ -1377,7 +1436,7 @@ function normalizeItemName(str) {
   });
 }
 
-// Multi-Image Batch Distribution
+// Multi-Image Batch Distribution with Deduplication & Instant Sync
 function handleBatchFiles(files) {
   const imageFiles = files.filter(f => f.type.startsWith('image/'));
   if (imageFiles.length === 0) {
@@ -1385,19 +1444,50 @@ function handleBatchFiles(files) {
     return;
   }
 
+  // Deduplication check against existing items
+  const existingNames = new Set((appState.currentList.items || []).map(it => normalizeItemName(it.name)));
+  (appState.currentList.items || []).forEach(it => {
+    if (it.fileName) existingNames.add(normalizeItemName(it.fileName));
+  });
+
+  const filesToAdd = [];
+  const duplicateFiles = [];
+
+  imageFiles.forEach((file) => {
+    let cleanName = file.name.replace(/\.[^/.]+$/, '').trim();
+    const rawFileName = file.name.trim();
+
+    const normClean = normalizeItemName(cleanName);
+    const normFile = normalizeItemName(rawFileName);
+
+    if (existingNames.has(normClean) || existingNames.has(normFile)) {
+      duplicateFiles.push(cleanName || rawFileName);
+    } else {
+      existingNames.add(normClean);
+      existingNames.add(normFile);
+      filesToAdd.push({ file, cleanName, rawFileName });
+    }
+  });
+
+  if (filesToAdd.length === 0) {
+    showToast(`⚠️ تم تجاهل جميع الصور لأنها مكررة وموجودة بالفعل: ${duplicateFiles.slice(0, 3).join('، ')}`);
+    return;
+  }
+
   let processedCount = 0;
   const newItems = [];
 
-  imageFiles.forEach((file, index) => {
+  filesToAdd.forEach(({ file, cleanName, rawFileName }, index) => {
     readFileAsDataUrl(file, (dataUrl) => {
-      let cleanName = file.name.replace(/\.[^/.]+$/, '');
+      let finalName = cleanName;
       if (cleanName.includes('WhatsApp')) {
-        cleanName = `غرض مصور ${appState.currentList.items.length + index + 1}`;
+        finalName = `غرض مصور ${appState.currentList.items.length + index + 1}`;
       }
 
       newItems.push({
         id: generateId(),
-        name: cleanName,
+        name: finalName,
+        fileName: rawFileName,
         quantityRequired: 1,
         quantityFound: 0,
         unit: 'حبة',
@@ -1409,11 +1499,17 @@ function handleBatchFiles(files) {
       });
 
       processedCount++;
-      if (processedCount === imageFiles.length) {
+      if (processedCount === filesToAdd.length) {
         appState.currentList.items = [...newItems, ...appState.currentList.items];
         saveData();
         renderApp();
-        showToast(`🎉 تم توزيع ${imageFiles.length} صورة على كروت مستقلة بنجاح!`);
+        syncBatchToSupabase(newItems);
+
+        if (duplicateFiles.length > 0) {
+          showToast(`✓ تم توزيع ${newItems.length} كروت جديدة، وتجاهل ${duplicateFiles.length} صورة مكررة (${duplicateFiles.slice(0, 2).join('، ')}${duplicateFiles.length > 2 ? '...' : ''})!`);
+        } else {
+          showToast(`🎉 تم توزيع ${newItems.length} صورة على كروت مستقلة بنجاح!`);
+        }
       }
     });
   });
@@ -1450,7 +1546,8 @@ function readFileAsDataUrl(file, callback) {
   const reader = new FileReader();
   reader.onload = (e) => {
     const rawData = e.target.result;
-    compressImage(rawData, 900, 900, 0.75, (compressed) => {
+    // 640x640 at 0.65 provides retina sharpness on mobile cards while staying ~30KB for instant cloud sync
+    compressImage(rawData, 640, 640, 0.65, (compressed) => {
       callback(compressed);
     });
   };
@@ -1720,6 +1817,15 @@ function handleRolloverMissingFromHistory() {
 function renderApp() {
   const { currentList, lang, settings, viewingHistoryTrip } = appState;
   const t = i18n[lang];
+
+  // Seamlessly hide splash screen
+  const splash = document.getElementById('appSplashScreen');
+  if (splash) {
+    setTimeout(() => {
+      splash.classList.add('splash-hidden');
+      setTimeout(() => splash.remove(), 400);
+    }, 200);
+  }
 
   const activeDisplayList = viewingHistoryTrip || currentList;
   const isHistoryMode = !!viewingHistoryTrip;
@@ -2088,6 +2194,7 @@ function attachCardListeners(card, item, isHistoryMode) {
       }
       saveData();
       renderApp();
+      syncSingleItemToSupabase(item);
     });
   }
 
@@ -2105,6 +2212,7 @@ function attachCardListeners(card, item, isHistoryMode) {
       }
       saveData();
       renderApp();
+      syncSingleItemToSupabase(item);
     });
   }
 
@@ -2121,6 +2229,7 @@ function attachCardListeners(card, item, isHistoryMode) {
       }
       saveData();
       renderApp();
+      syncSingleItemToSupabase(item);
     });
   }
 
@@ -2137,6 +2246,7 @@ function attachCardListeners(card, item, isHistoryMode) {
       }
       saveData();
       renderApp();
+      syncSingleItemToSupabase(item);
     });
   }
 
@@ -2171,6 +2281,7 @@ function attachCardListeners(card, item, isHistoryMode) {
       item.alternativeImageUrl = null;
       saveData();
       renderApp();
+      syncSingleItemToSupabase(item);
     });
   }
   if (subConfirm) {
@@ -2180,6 +2291,7 @@ function attachCardListeners(card, item, isHistoryMode) {
       appState.openSubstituteItemId = null;
       saveData();
       renderApp();
+      syncSingleItemToSupabase(item);
       showToast(`✓ تم اعتماد البديل لـ "${item.name}"!`);
     });
   }
@@ -2193,6 +2305,7 @@ function attachCardListeners(card, item, isHistoryMode) {
         item.quantityFound--;
         saveData();
         renderApp();
+        syncSingleItemToSupabase(item);
       }
     });
   }
@@ -2203,10 +2316,12 @@ function attachCardListeners(card, item, isHistoryMode) {
         item.quantityFound++;
         saveData();
         renderApp();
+        syncSingleItemToSupabase(item);
       } else {
         item.status = 'bought';
         saveData();
         renderApp();
+        syncSingleItemToSupabase(item);
       }
     });
   }
@@ -2229,6 +2344,7 @@ function attachCardListeners(card, item, isHistoryMode) {
           item.imageUrl = dataUrl;
           saveData();
           renderApp();
+          syncSingleItemToSupabase(item);
         });
       }
     });
@@ -2238,9 +2354,13 @@ function attachCardListeners(card, item, isHistoryMode) {
   const btnDel = card.querySelector('.btn-card-del');
   if (btnDel) {
     btnDel.addEventListener('click', () => {
-      appState.currentList.items = appState.currentList.items.filter(x => x.id !== item.id);
+      const deletedId = item.id;
+      appState.currentList.items = appState.currentList.items.filter(x => x.id !== deletedId);
       saveData();
       renderApp();
+      if (supabase && appState.tablesExistInSupabase && appState.homeNo) {
+        supabase.from('list_items').delete().eq('id', deletedId).catch(console.warn);
+      }
     });
   }
 }

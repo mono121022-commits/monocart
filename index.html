@@ -17,12 +17,22 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="MonoCart" />
-  <link rel="apple-touch-icon" href="/logo.png" />
-  <link rel="icon" type="image/png" href="/logo.png" />
+  <link rel="apple-touch-icon" href="/icon-maskable.png" />
+  <link rel="icon" type="image/png" href="/icon-512.png" />
   
   <link rel="stylesheet" href="/src/style.css" />
 </head>
 <body>
+  <!-- Initial Seamless Splash Screen (No Black Boxes) -->
+  <div id="appSplashScreen" class="app-splash-screen">
+    <div class="splash-content">
+      <img src="/logo-splash.png" class="splash-logo-img" alt="مونو كارت" />
+      <div class="splash-loading-dots">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
   <div id="app" class="app-wrapper">
     <!-- Top Navigation Bar -->
     <header class="navbar">
@@ -650,17 +660,17 @@
     <!-- Modal: Image Zoom & Lightbox -->
     <div id="modalImageZoom" class="modal-backdrop zoom-lightbox-backdrop" style="display: none;">
       <div class="zoom-lightbox-window">
-        <!-- Close Button -->
-        <button class="btn-close-zoom" id="btnCloseImageZoom" title="إغلاق">&times;</button>
-        
         <!-- Zoom Controls Header -->
         <div class="zoom-toolbar">
-          <div class="zoom-title-badge" id="zoomModalTitle" dir="auto">معاينة الصورة</div>
+          <div class="zoom-toolbar-header-row">
+            <div class="zoom-title-badge" id="zoomModalTitle" dir="auto">معاينة الصورة</div>
+            <button class="btn-close-zoom" id="btnCloseImageZoom" title="إغلاق">&times;</button>
+          </div>
           <div class="zoom-actions">
             <button type="button" class="btn-zoom-action" id="btnZoomOut" title="تصغير (-)">🔍−</button>
             <span class="zoom-scale-indicator" id="zoomScaleLabel">100%</span>
             <button type="button" class="btn-zoom-action" id="btnZoomIn" title="تكبير (+)">🔍+</button>
-            <button type="button" class="btn-zoom-action btn-zoom-reset" id="btnZoomReset" title="إعادة الضبط">🔄 إعادة ضبط</button>
+            <button type="button" class="btn-zoom-action btn-zoom-reset" id="btnZoomReset" title="إعادة الضبط">🔄 ضبط</button>
           </div>
         </div>
 
