@@ -9,7 +9,7 @@ import confetti from 'canvas-confetti';
 const i18n = {
   ar: {
     appTitle: 'مونو كارت',
-    appTagline: 'منظومة التسوق والمقاضي الذكية في الوقت الفعلي',
+    appTagline: 'سلة المقاضي الذكية',
     compileBtn: 'تجميع وطباعة',
     historyBtn: 'السجل & الإحصائيات',
     settingsBtn: 'الإعدادات',
@@ -73,16 +73,16 @@ const i18n = {
     langToggle: 'English',
     tabAuthLogin: '🔑 تسجيل الدخول',
     tabAuthRegister: '✨ تسجيل منزل جديد',
-    lblHomeLogin: 'رمز المنزل أو بصمة العميل:',
+    lblHomeLogin: 'رمز المنزل أو كود العميل:',
     lblHomeRegister: 'رمز المنزل الجديد (بصمة العميل):',
-    inputHomeNoPlaceholder: 'اكتب رمز المنزل الخاص بك...',
-    inputNewHomeNoPlaceholder: 'اكتب رمز المنزل الجديد...',
+    inputHomeNoPlaceholder: 'مثال: منزل 101 أو كودك الخاص...',
+    inputNewHomeNoPlaceholder: 'مثال: فيلا 5 أو عائلة أحمد...',
     waSupportTitle: 'تواصل مباشرة مع الدعم الفني عبر واتساب',
     waSupportSub: 'اضغط هنا للمحادثة الفورية على WhatsApp'
   },
   en: {
     appTitle: 'MonoCart',
-    appTagline: 'Smart Real-time Grocery & Shopping Platform',
+    appTagline: 'Smart Shopping & Groceries',
     compileBtn: 'Compile & Print',
     historyBtn: 'History & Stats',
     settingsBtn: 'Settings',
@@ -148,8 +148,8 @@ const i18n = {
     tabAuthRegister: '✨ Register New Home',
     lblHomeLogin: 'Home Code or Client ID:',
     lblHomeRegister: 'New Home Code (Client ID):',
-    inputHomeNoPlaceholder: 'Enter your home code...',
-    inputNewHomeNoPlaceholder: 'Enter new unique home code...',
+    inputHomeNoPlaceholder: 'e.g. Home 101 or your Client ID...',
+    inputNewHomeNoPlaceholder: 'e.g. Villa 5 or Family Cart...',
     waSupportTitle: 'Direct WhatsApp Support',
     waSupportSub: 'Click here for immediate chat on WhatsApp'
   }

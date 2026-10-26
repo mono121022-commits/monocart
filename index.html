@@ -6,10 +6,19 @@
   <title>MonoCart | مونو كارت - منصة المقاضي الذكية</title>
   <meta name="description" content="منصة تفاعلية عصرية لإدارة أغراض الشراء، إرفاق الصور، التحقق الفوري، وتجميع الكروت وتحليل البيانات في الوقت الفعلي." />
   
-  <!-- Google Fonts: Cairo & Plus Jakarta Sans -->
+  <!-- Google Fonts: Alexandria (Premium Arabic) & Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Mobile App & PWA Settings -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#081226" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="MonoCart" />
+  <link rel="apple-touch-icon" href="/logo.png" />
+  <link rel="icon" type="image/png" href="/logo.png" />
   
   <link rel="stylesheet" href="/src/style.css" />
 </head>
@@ -24,13 +33,13 @@
           </div>
           <div class="brand-text">
             <div class="brand-title-row">
-              <h1 class="brand-title" id="appTitle">مونو كارت <span class="brand-badge">MonoCart</span></h1>
+              <h1 class="brand-title" id="appTitle">مونو كارت</h1>
               <span id="supabaseStatus" class="connection-badge status-supabase" title="حالة المزامنة السحابية">
                 <span class="pulse-dot"></span>
-                <span class="status-text">مزامنة سحابية مباشرة</span>
+                <span class="status-text">مزامنة سحابية</span>
               </span>
             </div>
-            <p class="brand-tagline" id="appTagline">منظومة التسوق والمقاضي الذكية في الوقت الفعلي</p>
+            <p class="brand-tagline" id="appTagline">سلة المقاضي الذكية</p>
           </div>
         </div>
 
@@ -468,8 +477,8 @@
           <div class="home-logo-glow">
             <img src="/logo.png" class="home-logo-img" alt="MonoCart Logo" />
           </div>
-          <h2 class="home-login-title" id="homeModalMainTitle">منظومة مونو كارت للمقاضي</h2>
-          <p class="home-login-subtitle" id="homeModalMainSubtitle">سجّل دخولك لمنزلك لمزامنة المقاضي، أو أسّس منزلاً جديداً بسلة نظيفة وفارغة.</p>
+          <h2 class="home-login-title" id="homeModalMainTitle">مونو كارت</h2>
+          <p class="home-login-subtitle" id="homeModalMainSubtitle">سجّل دخولك لمزامنة المقاضي، أو أنشئ سلة جديدة.</p>
         </div>
 
         <!-- Segmented Tabs: Login vs Register -->
@@ -486,19 +495,10 @@
         <div id="panelAuthLogin" class="auth-panel-content">
           <form id="formHomeLogin" class="home-login-form">
             <div class="home-input-wrap">
-              <label for="inputHomeNo" class="home-input-label" id="lblHomeLogin">رمز المنزل أو بصمة العميل:</label>
+              <label for="inputHomeNo" class="home-input-label" id="lblHomeLogin">رمز المنزل أو كود العميل:</label>
               <div class="input-with-icon">
                 <span class="input-icon">🔑</span>
-                <input type="text" id="inputHomeNo" class="form-input home-number-input" placeholder="اكتب رمز المنزل الخاص بك..." required dir="auto" autofocus />
-              </div>
-            </div>
-
-            <div class="quick-homes-row">
-              <span class="quick-homes-hint" id="lblQuickHomes">خيارات سريعة:</span>
-              <div class="quick-homes-tags">
-                <button type="button" class="btn-quick-home" data-home="101">🏠 منزل 101</button>
-                <button type="button" class="btn-quick-home" data-home="202">🏢 شقة 202</button>
-                <button type="button" class="btn-quick-home" data-home="فيلا 5">🌴 فيلا 5</button>
+                <input type="text" id="inputHomeNo" class="form-input home-number-input" placeholder="مثال: منزل 101 أو كودك الخاص..." required dir="auto" autofocus />
               </div>
             </div>
 
@@ -519,7 +519,7 @@
               <label for="inputNewHomeNo" class="home-input-label" id="lblHomeRegister">رمز المنزل الجديد (بصمة العميل):</label>
               <div class="input-with-icon">
                 <span class="input-icon">✨</span>
-                <input type="text" id="inputNewHomeNo" class="form-input home-number-input" placeholder="اكتب رمز المنزل الجديد..." required dir="auto" />
+                <input type="text" id="inputNewHomeNo" class="form-input home-number-input" placeholder="مثال: فيلا 5 أو عائلة أحمد..." required dir="auto" />
               </div>
               <p class="home-input-hint" id="lblHomeRegisterHint">سنقوم بالتحقق في سوبابيز والتأكد من أن الرمز غير مكرر، وبدء سلة جديدة فارغة تماماً.</p>
             </div>

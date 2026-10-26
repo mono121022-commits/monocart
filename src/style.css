@@ -56,8 +56,8 @@
   --transition-normal: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   --transition-bounce: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   
-  /* Fonts */
-  --font-arabic: 'Cairo', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* Fonts: Alexandria (Premium modern Arabic) */
+  --font-arabic: 'Alexandria', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-latin: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
@@ -1857,20 +1857,370 @@ html[dir="rtl"] .card-status-badge {
   overflow-x: auto;
 }
 
-/* Responsive adjustments */
-@media (max-width: 640px) {
+/* ==========================================================================
+   Mobile & Responsive Layout System (Optimized for Small Screens & Phones)
+   ========================================================================== */
+@media (max-width: 768px) {
+  /* 1. Header: unpin from sticky so it does not cover mobile content */
   .navbar {
-    padding: 0.75rem 1rem;
+    position: relative !important;
+    padding: 0.6rem 0.85rem !important;
   }
+
+  .nav-container {
+    gap: 0.65rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .brand-group {
+    gap: 0.6rem !important;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .brand-logo {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: var(--radius-sm) !important;
+  }
+
+  .brand-title {
+    font-size: 1.15rem !important;
+  }
+
+  .brand-tagline {
+    font-size: 0.72rem !important;
+  }
+
+  .connection-badge {
+    padding: 0.15rem 0.45rem !important;
+    font-size: 0.68rem !important;
+  }
+
+  .home-user-pill {
+    padding: 0.25rem 0.65rem !important;
+    font-size: 0.78rem !important;
+    align-self: flex-start;
+  }
+
+  .home-label {
+    font-size: 0.78rem !important;
+  }
+
+  .btn-switch-home {
+    font-size: 0.68rem !important;
+    padding: 0.12rem 0.45rem !important;
+  }
+
+  /* Nav actions: horizontal scrolling row on mobile */
+  .nav-actions {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    width: 100% !important;
+    gap: 0.4rem !important;
+    padding-bottom: 2px !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+  .nav-actions::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-actions .btn,
+  .nav-actions .btn-whatsapp-nav,
+  .nav-actions .theme-toggle-btn,
+  .nav-actions .lang-btn {
+    padding: 0.35rem 0.65rem !important;
+    font-size: 0.78rem !important;
+    flex-shrink: 0 !important;
+    min-height: 34px !important;
+    gap: 0.35rem !important;
+  }
+
+  /* 2. Role Bar: compact & responsive */
+  .role-bar-wrapper {
+    position: relative !important;
+    padding: 0.5rem 0.85rem !important;
+  }
+
+  .role-bar-container {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    align-items: stretch !important;
+  }
+
+  .role-segmented-switch {
+    width: 100% !important;
+    display: flex !important;
+  }
+
+  .role-btn {
+    flex: 1 !important;
+    padding: 0.45rem 0.5rem !important;
+    gap: 0.4rem !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  .role-btn-icon {
+    font-size: 1.15rem !important;
+  }
+
+  .role-title {
+    font-size: 0.82rem !important;
+    white-space: nowrap !important;
+  }
+
+  .role-hint {
+    display: none !important;
+  }
+
+  .role-quick-actions {
+    width: 100% !important;
+  }
+
+  .btn-finish-trip,
+  #btnCreateNewList {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 0.6rem !important;
+    font-size: 0.88rem !important;
+  }
+
+  /* 3. Main Content & Hero */
+  .main-content {
+    margin: 0.85rem auto !important;
+    padding: 0 0.85rem 3rem !important;
+    gap: 1rem !important;
+  }
+
+  .list-hero-card {
+    padding: 1rem !important;
+    border-radius: var(--radius-lg) !important;
+    gap: 1rem !important;
+  }
+
+  .hero-left {
+    min-width: 100% !important;
+  }
+
+  .list-name-input {
+    font-size: 1.35rem !important;
+    width: 100% !important;
+  }
+
   .hero-analytics {
-    width: 100%;
-    justify-content: center;
+    width: 100% !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 1rem !important;
   }
+
   .quick-stats-grid {
-    width: 100%;
+    width: 100% !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 0.4rem !important;
   }
+
+  .stat-pill {
+    padding: 0.45rem 0.4rem !important;
+    min-width: auto !important;
+    text-align: center !important;
+    border-radius: var(--radius-md) !important;
+  }
+
+  .stat-num {
+    font-size: 1.1rem !important;
+  }
+
+  .stat-lbl {
+    font-size: 0.68rem !important;
+  }
+
+  /* 4. Item Creation Panel & Tabs */
+  .creation-panel {
+    border-radius: var(--radius-lg) !important;
+  }
+
+  .creation-tabs {
+    display: flex !important;
+    gap: 0.35rem !important;
+    padding: 0.35rem !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+  .creation-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-btn {
+    flex: 1 !important;
+    padding: 0.5rem 0.65rem !important;
+    font-size: 0.78rem !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+  }
+
+  .creation-content {
+    padding: 1rem 0.85rem !important;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr !important;
+    gap: 0.5rem !important;
+  }
+
+  .form-footer-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.65rem !important;
+  }
+
+  .attach-preview-bar {
+    width: 100% !important;
+    display: flex !important;
+    gap: 0.4rem !important;
+  }
+
+  .btn-attach-photo,
+  .btn-attach-camera {
+    flex: 1 !important;
+    justify-content: center !important;
+    padding: 0.5rem 0.35rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  #btnAddItemSubmit {
+    width: 100% !important;
+    padding: 0.75rem !important;
+    font-size: 0.95rem !important;
+    min-height: 46px !important;
+  }
+
+  .dropzone-box {
+    padding: 1.5rem 0.85rem !important;
+  }
+
+  .dropzone-icon {
+    font-size: 2.2rem !important;
+  }
+
+  .dropzone-title {
+    font-size: 1rem !important;
+  }
+
+  .dropzone-subtitle {
+    font-size: 0.8rem !important;
+  }
+
+  /* 5. Filter bar */
+  .filter-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.6rem !important;
+  }
+
+  .filter-tabs {
+    overflow-x: auto !important;
+    padding-bottom: 3px !important;
+    scrollbar-width: none !important;
+  }
+  .filter-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-btn {
+    padding: 0.4rem 0.75rem !important;
+    font-size: 0.78rem !important;
+    flex-shrink: 0 !important;
+  }
+
+  .filter-search-box {
+    max-width: 100% !important;
+  }
+
+  /* 6. Item Cards & 4-Action Buttons */
   .cards-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .item-card {
+    border-radius: var(--radius-lg) !important;
+  }
+
+  .card-media-wrap {
+    height: 170px !important;
+  }
+
+  .card-body {
+    padding: 0.85rem !important;
+    gap: 0.65rem !important;
+  }
+
+  .card-title {
+    font-size: 1.05rem !important;
+  }
+
+  .card-check-actions-4 {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.4rem !important;
+    margin-top: 0.65rem !important;
+  }
+
+  .card-check-actions-4 button {
+    min-height: 44px !important;
+    padding: 0.45rem 0.35rem !important;
+    font-size: 0.78rem !important;
+    font-weight: 800 !important;
+    gap: 0.35rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .css-art-icon {
+    width: 12px !important;
+    height: 12px !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* 7. Login Modal */
+  .home-login-window {
+    width: 95% !important;
+    max-width: 95% !important;
+    padding: 1.25rem 1rem !important;
+    max-height: 92vh !important;
+    border-radius: var(--radius-lg) !important;
+  }
+
+  .home-logo-glow {
+    width: 58px !important;
+    height: 58px !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .home-login-title {
+    font-size: 1.35rem !important;
+    margin-bottom: 0.35rem !important;
+  }
+
+  .home-login-subtitle {
+    font-size: 0.82rem !important;
+    margin-bottom: 1.1rem !important;
+  }
+
+  .home-auth-tabs {
+    margin-bottom: 1rem !important;
+  }
+
+  .home-number-input {
+    padding: 0.75rem 2.4rem 0.75rem 0.85rem !important;
+    font-size: 1rem !important;
   }
 }
 
