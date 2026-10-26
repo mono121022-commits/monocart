@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MonoCart | مونو كارت - منصة المقاضي الذكية</title>
+  <meta name="description" content="منصة تفاعلية عصرية لإدارة أغراض الشراء، إرفاق الصور، التحقق الفوري، وتجميع الكروت وتحليل البيانات في الوقت الفعلي." />
+  
+  <!-- Google Fonts: Cairo & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app" class="app-wrapper">
+    <!-- Top Navigation Bar -->
+    <header class="navbar">
+      <div class="nav-container">
+        <div class="brand-group">
+          <div class="brand-logo">
+            <img src="/logo.png" class="brand-logo-img" alt="MonoCart Logo" />
+          </div>
+          <div class="brand-text">
+            <div class="brand-title-row">
+              <h1 class="brand-title" id="appTitle">مونو كارت <span class="brand-badge">MonoCart</span></h1>
+              <span id="supabaseStatus" class="connection-badge status-supabase" title="حالة المزامنة السحابية">
+                <span class="pulse-dot"></span>
+                <span class="status-text">مزامنة سحابية مباشرة</span>
+              </span>
+            </div>
+            <p class="brand-tagline" id="appTagline">منظومة التسوق والمقاضي الذكية في الوقت الفعلي</p>
+          </div>
+        </div>
+
+        <!-- Active Home Badge (طبقة رقم المنزل) -->
+        <div class="home-user-pill" id="homeUserBadge" title="المنزل النشط">
+          <span class="home-icon">🏠</span>
+          <span id="activeHomeLabel" class="home-label" dir="auto">منزل #101</span>
+          <button id="btnSwitchHome" class="btn-switch-home" title="تبديل رقم المنزل">تبديل</button>
+        </div>
+
+        <!-- Global Action Buttons -->
+        <div class="nav-actions">
+          <button id="btnCompile" class="btn btn-primary" title="تجميع الصور ككولاج أو PDF">
+            <span class="btn-icon">📦</span>
+            <span class="btn-label" data-i18n="compileBtn">تجميع وطباعة</span>
+          </button>
+
+          <button id="btnHistory" class="btn btn-secondary" title="السجل وقوائم سابقة والأكثر تكراراً">
+            <span class="btn-icon">📊</span>
+            <span class="btn-label" data-i18n="historyBtn">السجل & الإحصائيات</span>
+          </button>
+
+          <button id="btnSettings" class="btn btn-ghost" title="الإعدادات ومدة الاحتفاظ">
+            <span class="btn-icon">⚙️</span>
+            <span class="btn-label" data-i18n="settingsBtn">الإعدادات</span>
+          </button>
+
+          <button id="btnLangToggle" class="btn btn-ghost lang-btn" title="تغيير اللغة">
+            <span class="lang-flag">🌐</span>
+            <span id="langLabel">English</span>
+          </button>
+
+          <!-- Dark / Light Theme Toggle -->
+          <button id="btnThemeToggle" class="btn btn-ghost theme-toggle-btn" title="تبديل الثيم الداكن / الفاتح">
+            <span class="theme-icon" id="themeIcon">🌙</span>
+            <span id="themeLabel">داكن</span>
+          </button>
+
+          <!-- WhatsApp Support Button -->
+          <a href="https://wa.me/966541932559?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%A8%D8%AE%D8%B5%D9%88%D8%B5%20%D9%85%D9%86%D8%B5%D8%A9%20%D9%85%D9%88%D9%86%D9%88%20%D9%83%D8%A7%D8%B1%D8%AA" target="_blank" id="btnWhatsAppNav" class="btn btn-ghost btn-whatsapp-nav" title="دعم واتساب الفوري 966541932559+">
+            <span class="wa-nav-icon">💬</span>
+            <span id="waNavLabel">دعم واتساب</span>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Role Switcher & Trip Action Bar (المحضّر بالبيت vs المتسوق بالسوبرماركت) -->
+    <div class="role-bar-wrapper">
+      <div class="role-bar-container">
+        <!-- Role Segmented Switch -->
+        <div class="role-segmented-switch">
+          <button id="btnRoleReviewer" class="role-btn active" data-role="reviewer">
+            <span class="role-btn-icon">📝</span>
+            <div class="role-btn-text">
+              <span class="role-title">وضع المُحضّر (في البيت)</span>
+              <span class="role-hint">إعداد الأغراض ومتابعة المشتري حيّاً</span>
+            </div>
+          </button>
+          <button id="btnRoleShopper" class="role-btn" data-role="shopper">
+            <span class="role-btn-icon">🛒</span>
+            <div class="role-btn-text">
+              <span class="role-title">وضع المتسوق (في السوبرماركت)</span>
+              <span class="role-hint">للتحقق والشراء وتسجيل الكميات والبدائل</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- Quick Actions: New List / Finish Trip -->
+        <div class="role-quick-actions">
+          <button id="btnCreateNewList" class="btn btn-secondary" title="إنشاء وتسمية سلة أغراض جديدة">
+            <span>✨ قائمة أغراض جديدة</span>
+          </button>
+          <button id="btnFinishShopping" class="btn btn-finish-trip" title="إنهاء جولة التسوق وحفظ السجل بكل التفاصيل">
+            <span>🏁 إنهاء التسوق وحفظ السجل</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Container -->
+    <main class="main-content">
+      <!-- History Viewing Banner (Active when inspecting a past trip directly on the main page) -->
+      <section id="historyViewBanner" class="history-view-banner" style="display: none;">
+        <div class="h-banner-main">
+          <div class="h-banner-icon-badge">📜</div>
+          <div class="h-banner-text">
+            <span class="h-banner-tag">أنت الآن في وضع استعراض سجل محفوظ</span>
+            <h3 id="historyBannerTitle" class="h-banner-title" dir="auto">أغراض سابقة</h3>
+            <p id="historyBannerSubtitle" class="h-banner-sub" dir="auto">تاريخ الجولة • حدد أي أصناف ترغب في نقلها لسلة جديدة</p>
+          </div>
+        </div>
+        <div class="h-banner-actions">
+          <button id="btnExitHistoryView" class="btn btn-secondary btn-exit-history">
+            ↩️ العودة للقائمة الحالية النشطة
+          </button>
+        </div>
+      </section>
+
+      <!-- Active List Header & Stats Bar -->
+      <section class="list-hero-card">
+        <div class="hero-left">
+          <div class="list-meta">
+            <span class="meta-pill home-meta-pill" id="homeMetaPill">🏡 منزل: 101</span>
+            <span class="meta-pill role-meta-pill" id="activeRolePill">📝 وضع المُحضّر</span>
+            <span class="meta-pill" id="listDatePill">📅 اليوم</span>
+            <span class="meta-pill retention-pill" id="retentionPill">⏱️ الاحتفاظ: شهر</span>
+          </div>
+          <div class="list-title-edit-wrap">
+            <input type="text" id="listNameInput" class="list-name-input" value="أغراض اليوم" dir="auto" />
+            <button id="btnRenameList" class="btn-icon-tiny" title="تعديل الاسم">✏️</button>
+          </div>
+          <p class="list-subtitle" id="listSubtitle" dir="auto">حدّد المشتريات، التقط صور البدائل، وتابع النواقص فورياً.</p>
+        </div>
+
+        <!-- Progress Circular / Stat Gauge -->
+        <div class="hero-analytics">
+          <div class="progress-ring-container">
+            <svg class="progress-ring" width="90" height="90">
+              <circle class="progress-ring__circle-bg" stroke="#e2e8f0" stroke-width="8" fill="transparent" r="36" cx="45" cy="45" />
+              <circle id="progressCircle" class="progress-ring__circle" stroke="#f97316" stroke-width="8" stroke-dasharray="226.19" stroke-dashoffset="226.19" stroke-linecap="round" fill="transparent" r="36" cx="45" cy="45" />
+            </svg>
+            <div class="progress-text-center">
+              <span id="progressPercent" class="progress-val">0%</span>
+              <span class="progress-sub" data-i18n="completedLabel">مكتمل</span>
+            </div>
+          </div>
+
+          <div class="quick-stats-grid">
+            <div class="stat-pill stat-total">
+              <span class="stat-num" id="statTotal">0</span>
+              <span class="stat-lbl" data-i18n="totalItems">إجمالي الأغراض</span>
+            </div>
+            <div class="stat-pill stat-bought">
+              <span class="stat-num" id="statBought">0</span>
+              <span class="stat-lbl" data-i18n="boughtItems">تم بالكامل</span>
+            </div>
+            <div class="stat-pill stat-partial">
+              <span class="stat-num" id="statPartial">0</span>
+              <span class="stat-lbl">شراء جزئي</span>
+            </div>
+            <div class="stat-pill stat-substitute">
+              <span class="stat-num" id="statSubstitute">0</span>
+              <span class="stat-lbl">بدائل</span>
+            </div>
+            <div class="stat-pill stat-missing">
+              <span class="stat-num" id="statMissing">0</span>
+              <span class="stat-lbl">معلقة</span>
+            </div>
+            <div class="stat-pill stat-remaining">
+              <span class="stat-num" id="statRemaining">0</span>
+              <span class="stat-lbl" data-i18n="pendingItems">باقي</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Data Analysis Banner (Live Alert) -->
+      <section id="analysisBanner" class="analysis-banner" style="display: none;">
+        <div class="banner-content">
+          <div class="banner-icon-badge" id="analysisIcon">📈</div>
+          <div class="banner-text">
+            <h4 id="analysisTitle" class="banner-title" dir="auto">تحليل سلة المقاضي</h4>
+            <p id="analysisDesc" class="banner-desc" dir="auto">جارِ التحليل...</p>
+          </div>
+        </div>
+        <div class="banner-actions">
+          <button id="btnQuickFinishFromBanner" class="btn btn-sm btn-outline-success">
+            🏁 إنهاء التسوق وحفظ السجل
+          </button>
+        </div>
+      </section>
+
+      <!-- New Item Creation / Quick Batch Dock (Displayed mainly in Reviewer / Planner mode) -->
+      <section id="creationPanelSection" class="creation-panel">
+        <div class="creation-tabs">
+          <button id="tabQuickAdd" class="tab-btn active" data-tab="single">
+            <span>✏️ كتابة غرض يدوي</span>
+          </button>
+          <button id="tabBatchImages" class="tab-btn" data-tab="batch">
+            <span>📸 توزيع صور متعددة على كروت</span>
+          </button>
+          <button id="tabLoadDemo" class="tab-btn" data-tab="demo" title="تحميل المقاضي التجريبية والصور التي أرفقتها">
+            <span>✨ تجربة المقاضي والصور الجاهزة</span>
+          </button>
+        </div>
+
+        <!-- Single Item Form -->
+        <div id="panelSingle" class="creation-content">
+          <form id="formAddItem" class="add-item-form">
+            <div class="form-row">
+              <div class="input-group main-input-wrap">
+                <textarea id="inputItemName" class="form-input multi-item-textarea" rows="2" placeholder="اكتب غرضاً، أو اضغط Enter لكتابة أغراض متعددة سطر بسطر (مثلاً: جبنة براميلي [Enter] لبن نادك [Enter] بطاطس)..." dir="auto" required></textarea>
+              </div>
+              <div class="input-group qty-wrap">
+                <input type="number" id="inputItemQtyNum" class="form-input" placeholder="العدد" min="1" value="1" dir="auto" />
+              </div>
+              <div class="input-group unit-wrap">
+                <input type="text" id="inputItemUnit" class="form-input" placeholder="الوحدة (علبة / كيس / كجم)" dir="auto" />
+              </div>
+              <div class="input-group note-wrap">
+                <input type="text" id="inputItemNote" class="form-input" placeholder="ملاحظات (اختياري)..." dir="auto" />
+              </div>
+            </div>
+
+            <div class="form-footer-row">
+              <div class="attach-preview-bar">
+                <label class="btn-attach-photo" for="fileSingleInput" title="إرفاق صورة للغرض">
+                  <span>📷 إرفاق صورة</span>
+                  <input type="file" id="fileSingleInput" accept="image/*" style="display:none" />
+                </label>
+                <button type="button" id="btnLaunchCameraSingle" class="btn-attach-camera" title="فتح الكاميرا المباشرة">
+                  <span>📸 لقطة كاميرا فورية</span>
+                </button>
+                <div id="singlePhotoPreview" class="photo-thumbnail-chip" style="display: none;">
+                  <img id="singlePhotoImg" src="" alt="معاينة" />
+                  <span id="removeSinglePhoto" class="remove-chip-btn">&times;</span>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-accent" id="btnAddItemSubmit">
+                <span>+ إضافة للأغراض</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Batch Multi-Image Distribution Panel -->
+        <div id="panelBatch" class="creation-content" style="display: none;">
+          <div class="dropzone-box" id="batchDropzone">
+            <div class="dropzone-inner">
+              <div class="dropzone-icon">📥</div>
+              <h3 class="dropzone-title">اسحب وأفلت صور متعددة هنا، أو اضغط للاختيار</h3>
+              <p class="dropzone-subtitle">عند رفع أكثر من صورة، سيقوم النظام تلقائياً بتوزيع كل صورة على كارت مستقل مع شيك ليست وملاحظات عصرية.</p>
+              <input type="file" id="fileBatchInput" multiple accept="image/*" style="display:none" />
+              <button type="button" class="btn btn-primary" onclick="document.getElementById('fileBatchInput').click()">
+                📂 اختيار صور متعددة من الجهاز
+              </button>
+            </div>
+          </div>
+          <div id="batchPreviewQueue" class="batch-preview-queue" style="display: none;"></div>
+        </div>
+
+        <!-- Demo Samples Loader Panel -->
+        <div id="panelDemo" class="creation-content" style="display: none;">
+          <div class="demo-samples-card">
+            <div class="demo-info">
+              <h4>🎯 المقاضي والصور التجريبية المرفقة من قبلك:</h4>
+              <p>جبنة براميلي، جبنة دوبل كريم، لبن نادك، زبادي نادك، بطاطس كياس وفرة أو داري، كزبرة، بقدونس، مكسرات، مع الـ 5 صور التي رفعتها.</p>
+            </div>
+            <button id="btnLoadDemoItems" class="btn btn-accent">
+              ⚡ شحن القائمة بالبيانات والصور فوراً
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Filter Controls & Action Bar -->
+      <section class="filter-bar">
+        <div class="filter-tabs">
+          <button class="filter-btn" data-filter="all">
+            <span>الكل</span>
+            <span class="count-badge" id="filterCountAll">0</span>
+          </button>
+          <button class="filter-btn active" data-filter="pending">
+            <span>⏳ متبقي للشراء</span>
+            <span class="count-badge" id="filterCountPending">0</span>
+          </button>
+          <button class="filter-btn" data-filter="bought">
+            <span>✓ تم بالكامل</span>
+            <span class="count-badge" id="filterCountBought">0</span>
+          </button>
+          <button class="filter-btn filter-btn-partial" data-filter="partial">
+            <span>⚠️ شراء جزئي</span>
+            <span class="count-badge" id="filterCountPartial">0</span>
+          </button>
+          <button class="filter-btn filter-btn-substitute" data-filter="substitute">
+            <span>🔄 بدائل</span>
+            <span class="count-badge" id="filterCountSubstitute">0</span>
+          </button>
+          <button class="filter-btn" data-filter="missing">
+            <span>⏳ معلقة</span>
+            <span class="count-badge" id="filterCountMissing">0</span>
+          </button>
+        </div>
+
+        <div class="filter-search-box">
+          <input type="text" id="searchInput" class="search-input" placeholder="🔍 بحث سريع في الأغراض..." dir="auto" />
+          <button id="btnClearList" class="btn-clear-list" title="مسح كل الأغراض">🗑️ مسح الكل</button>
+        </div>
+      </section>
+
+      <!-- History Multi-Select Floating / Sticky Bar (Visible during History inspection) -->
+      <section id="historySelectionBar" class="history-selection-bar" style="display: none;">
+        <div class="h-sel-info">
+          <span class="selection-badge-count" id="historySelectedCount">0 صنف محدد</span>
+          <button type="button" id="btnSelectAllHistory" class="btn btn-sm btn-ghost">تحديد الكل</button>
+          <button type="button" id="btnDeselectAllHistory" class="btn btn-sm btn-ghost">إلغاء التحديد</button>
+        </div>
+        <div class="h-sel-action">
+          <button type="button" id="btnAddSelectedToNewList" class="btn btn-accent btn-md">
+            <span>✨ إضافة الأصناف المحددة إلى سلة جديدة</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Cards Grid (The Checklist) -->
+      <section class="cards-section">
+        <div id="itemsGrid" class="cards-grid">
+          <!-- Item Cards rendered dynamically -->
+        </div>
+
+        <div id="emptyState" class="empty-state" style="display: none;">
+          <div class="empty-icon">📝</div>
+          <h3>لا توجد أغراض في هذه القائمة حالياً</h3>
+          <p>أضف غرضاً جديداً بالأعلى أو ارفع صوراً متعددة لتوزيعها تلقائياً على الكروت.</p>
+        </div>
+      </section>
+    </main>
+
+    <!-- Modal: New List Creation (إنشاء وتسمية سلة جديدة) -->
+    <div id="modalNewList" class="modal-backdrop" style="display: none;">
+      <div class="modal-window modal-sm">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <span class="modal-badge-icon">✨</span>
+            <div>
+              <h3 class="modal-title">إنشاء سلة مقاضي جديدة</h3>
+              <p class="modal-subtitle">حدد اسماً مميزاً لسلة المقاضي (مثل: مقاضي الأسبوع، خضار وفاكهة، عزومة الجمعة...)</p>
+            </div>
+          </div>
+          <button class="btn-close-modal" id="btnCloseNewListModal">&times;</button>
+        </div>
+        <form id="formNewListModal" class="modal-body">
+          <div class="form-input-stacked">
+            <label for="inputNewListName">اسم السلة الجديدة:</label>
+            <input type="text" id="inputNewListName" class="form-input" placeholder="مثلاً: مقاضي كارفور أو عزومة السبت..." required dir="auto" />
+          </div>
+          <div class="quick-list-names">
+            <span>اقتراحات سريعة:</span>
+            <div class="quick-name-tags">
+              <button type="button" class="btn-quick-name" data-name="مقاضي الأسبوع">مقاضي الأسبوع</button>
+              <button type="button" class="btn-quick-name" data-name="خضار وفاكهة">خضار وفاكهة</button>
+              <button type="button" class="btn-quick-name" data-name="طلبات السوبرماركت">طلبات السوبرماركت</button>
+              <button type="button" class="btn-quick-name" data-name="تموينات العزومة">تموينات العزومة</button>
+            </div>
+          </div>
+          <div class="modal-footer-actions">
+            <button type="submit" class="btn btn-accent btn-lg btn-block">
+              <span>بدء السلة الآن 🚀</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal: Finish Shopping Trip ("إنهاء التسوق وحفظ السجل") -->
+    <div id="modalFinishTrip" class="modal-backdrop" style="display: none;">
+      <div class="modal-window">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <span class="modal-badge-icon">🏁</span>
+            <div>
+              <h3 class="modal-title">إنهاء جولة التسوق وحفظ السجل</h3>
+              <p class="modal-subtitle">سيتم أرشفة هذه الجولة بكل تفاصيلها (المشتريات، النواقص، البدائل المصورة، والكميات) في السجل.</p>
+            </div>
+          </div>
+          <button class="btn-close-modal" id="btnCloseFinishTripModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="finish-trip-summary" id="finishTripSummaryBox"></div>
+
+          <div class="finish-options-block">
+            <label class="finish-option-card">
+              <input type="radio" name="finishAction" value="save_only" checked />
+              <div class="opt-text">
+                <strong>💾 حفظ في السجل وإبقاء القائمة</strong>
+                <span>يتم حفظ نسخة تاريخية كاملة في السجل وتبقى القائمة مفتوحة لمزيد من التعديلات.</span>
+              </div>
+            </label>
+
+            <label class="finish-option-card highlight-opt">
+              <input type="radio" name="finishAction" value="save_and_rollover" />
+              <div class="opt-text">
+                <strong>🔄 حفظ السجل وترحيل النواقص لقائمة جديدة فوراً</strong>
+                <span>يتم أرشفة الجولة الحالية، ونقل كل الأغراض غير المتوفرة أو الناقصة جزئياً إلى قائمة جديدة لجولة التسوق القادمة!</span>
+              </div>
+            </label>
+          </div>
+
+          <div class="modal-footer-actions">
+            <button id="btnConfirmFinishTrip" class="btn btn-primary btn-lg btn-block">
+              <span>✓ تأكيد إنهاء التسوق والأرشفة</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Detailed History List Viewer (عرض تفاصيل أي قائمة في السجل) -->
+    <div id="modalHistoryDetail" class="modal-backdrop" style="display: none;">
+      <div class="modal-window modal-lg">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <span class="modal-badge-icon">📜</span>
+            <div>
+              <h3 class="modal-title" id="historyDetailTitle">تفاصيل القائمة السابقة</h3>
+              <p class="modal-subtitle" id="historyDetailSubtitle">تاريخ القائمة وحالتها</p>
+            </div>
+          </div>
+          <button class="btn-close-modal" id="btnCloseHistoryDetailModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="history-detail-stats-bar" id="historyDetailStatsBar"></div>
+          <div class="history-detail-items-grid" id="historyDetailItemsGrid"></div>
+        </div>
+        <div class="modal-footer">
+          <button id="btnReopenHistoryList" class="btn btn-secondary">
+            <span>⚡ استرجاع كقائمة نشطة</span>
+          </button>
+          <button id="btnRolloverMissingFromHistory" class="btn btn-accent">
+            <span>🔄 نقل النواقص فقط لقائمة جديدة</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Home Login & Registration Gateway with Supabase duplicate check & WhatsApp Support -->
+    <div id="modalHomeLogin" class="modal-backdrop home-login-backdrop" style="display: none;">
+      <div class="modal-window home-login-window">
+        <!-- Close Button (X) -->
+        <button class="btn-close-modal btn-close-home-login" id="btnCloseHomeLoginModal" title="إغلاق">&times;</button>
+        
+        <div class="home-login-header">
+          <div class="home-logo-glow">
+            <img src="/logo.png" class="home-logo-img" alt="MonoCart Logo" />
+          </div>
+          <h2 class="home-login-title" id="homeModalMainTitle">منظومة مونو كارت للمقاضي</h2>
+          <p class="home-login-subtitle" id="homeModalMainSubtitle">سجّل دخولك لمنزلك لمزامنة المقاضي، أو أسّس منزلاً جديداً بسلة نظيفة وفارغة.</p>
+        </div>
+
+        <!-- Segmented Tabs: Login vs Register -->
+        <div class="home-auth-tabs">
+          <button type="button" class="home-auth-tab-btn active" id="tabAuthLogin">
+            <span id="tabAuthLoginText">🔑 تسجيل الدخول</span>
+          </button>
+          <button type="button" class="home-auth-tab-btn" id="tabAuthRegister">
+            <span id="tabAuthRegisterText">✨ تسجيل منزل جديد</span>
+          </button>
+        </div>
+
+        <!-- Tab 1: Login to Existing Home -->
+        <div id="panelAuthLogin" class="auth-panel-content">
+          <form id="formHomeLogin" class="home-login-form">
+            <div class="home-input-wrap">
+              <label for="inputHomeNo" class="home-input-label" id="lblHomeLogin">رمز المنزل أو بصمة العميل:</label>
+              <div class="input-with-icon">
+                <span class="input-icon">🔑</span>
+                <input type="text" id="inputHomeNo" class="form-input home-number-input" placeholder="اكتب رمز المنزل الخاص بك..." required dir="auto" autofocus />
+              </div>
+            </div>
+
+            <div class="quick-homes-row">
+              <span class="quick-homes-hint" id="lblQuickHomes">خيارات سريعة:</span>
+              <div class="quick-homes-tags">
+                <button type="button" class="btn-quick-home" data-home="101">🏠 منزل 101</button>
+                <button type="button" class="btn-quick-home" data-home="202">🏢 شقة 202</button>
+                <button type="button" class="btn-quick-home" data-home="فيلا 5">🌴 فيلا 5</button>
+              </div>
+            </div>
+
+            <div id="homeLoginAlert" class="auth-alert-box" style="display: none;"></div>
+
+            <div class="home-login-footer">
+              <button type="submit" id="btnSubmitLogin" class="btn btn-accent btn-lg btn-block">
+                <span>دخول ومزامنة المقاضي 🚀</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Tab 2: Register New Home -->
+        <div id="panelAuthRegister" class="auth-panel-content" style="display: none;">
+          <form id="formHomeRegister" class="home-login-form">
+            <div class="home-input-wrap">
+              <label for="inputNewHomeNo" class="home-input-label" id="lblHomeRegister">رمز المنزل الجديد (بصمة العميل):</label>
+              <div class="input-with-icon">
+                <span class="input-icon">✨</span>
+                <input type="text" id="inputNewHomeNo" class="form-input home-number-input" placeholder="اكتب رمز المنزل الجديد..." required dir="auto" />
+              </div>
+              <p class="home-input-hint" id="lblHomeRegisterHint">سنقوم بالتحقق في سوبابيز والتأكد من أن الرمز غير مكرر، وبدء سلة جديدة فارغة تماماً.</p>
+            </div>
+
+            <div id="homeRegisterAlert" class="auth-alert-box" style="display: none;"></div>
+
+            <div class="home-login-footer">
+              <button type="submit" id="btnSubmitRegister" class="btn btn-primary btn-lg btn-block">
+                <span>تأسيس المنزل وبدء سلة فارغة ✨</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- WhatsApp Support Direct Link (No visible raw phone number) -->
+        <div class="modal-wa-footer">
+          <a href="https://wa.me/966541932559?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%A8%D8%AE%D8%B5%D9%88%D8%B5%20%D9%85%D9%86%D8%B5%D8%A9%20%D9%85%D9%88%D9%86%D9%88%20%D9%83%D8%A7%D8%B1%D8%AA" target="_blank" class="home-wa-support-link" title="تواصل عبر واتساب للدعم">
+            <span class="wa-icon-bubble">💬</span>
+            <div class="wa-text-wrap">
+              <span class="wa-title" id="lblWaSupport">تواصل مباشرة مع الدعم الفني عبر واتساب</span>
+              <span class="wa-status-text">اضغط هنا للمحادثة الفورية على WhatsApp</span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Compilation & Collage (5 Images Per Row or PDF) -->
+    <div id="modalCompile" class="modal-backdrop" style="display: none;">
+      <div class="modal-window modal-lg">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <span class="modal-badge-icon">🖼️</span>
+            <div>
+              <h3 class="modal-title">تجميع وتصدير المقاضي المشتراة والصور</h3>
+              <p class="modal-subtitle">اختر تصدير صورة مجمعة (كولاج 5 صور بالصف) أو ملف PDF احترافي مع الملاحظات والبيانات.</p>
+            </div>
+          </div>
+          <button class="btn-close-modal" id="btnCloseCompileModal">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="compile-tabs">
+            <button id="tabCompileImage" class="compile-tab-btn active">
+              📸 صورة مجمّعة (5 صور في كل صف)
+            </button>
+            <button id="tabCompilePdf" class="compile-tab-btn">
+              📄 تقرير PDF شامل
+            </button>
+          </div>
+
+          <!-- Collage Canvas Preview -->
+          <div id="compileImagePane" class="compile-pane">
+            <div class="compile-options-bar">
+              <label class="compile-opt-item">
+                <input type="checkbox" id="chkIncludeItemName" checked />
+                <span>كتابة اسم الغرض على الصورة</span>
+              </label>
+              <label class="compile-opt-item">
+                <input type="checkbox" id="chkOnlyBought" checked />
+                <span>المقاضي التي تم شراؤها فقط</span>
+              </label>
+              <button id="btnRegenerateCanvas" class="btn btn-sm btn-secondary">🔄 إعادة توليد المعاينة</button>
+            </div>
+
+            <div class="canvas-scroll-container">
+              <canvas id="collageCanvas"></canvas>
+            </div>
+
+            <div class="compile-download-actions">
+              <button id="btnDownloadCollage" class="btn btn-accent btn-lg">
+                ⬇️ تحميل الصورة المجمعة (PNG عالي الدقة)
+              </button>
+            </div>
+          </div>
+
+          <!-- PDF Export Pane -->
+          <div id="compilePdfPane" class="compile-pane" style="display: none;">
+            <div class="pdf-preview-box" id="pdfPreviewContent" dir="rtl">
+              <div class="pdf-mockup-header">
+                <div class="pdf-brand">
+                  <h2>تقرير مقاضي مونو كارت 🛒 MonoCart Report</h2>
+                  <p id="pdfReportDate">التاريخ: اليوم</p>
+                </div>
+                <div class="pdf-badge" id="pdfCompletionBadge">اكتمال 100%</div>
+              </div>
+              <div class="pdf-items-summary" id="pdfItemsListPreview"></div>
+            </div>
+
+            <div class="compile-download-actions">
+              <button id="btnDownloadPdf" class="btn btn-primary btn-lg">
+                📥 تصدير وتحميل تقرير PDF (5 أصناف بالصف مع الصور)
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Live Camera Capture -->
+    <div id="modalCamera" class="modal-backdrop" style="display: none;">
+      <div class="modal-window modal-camera-window">
+        <div class="modal-header">
+          <h3 class="modal-title">📸 التقاط صورة فورية للكاميرا</h3>
+          <button class="btn-close-modal" id="btnCloseCameraModal">&times;</button>
+        </div>
+        <div class="modal-body camera-modal-body">
+          <div class="video-container">
+            <video id="cameraVideo" playsinline autoplay muted></video>
+            <div class="camera-grid-overlay"></div>
+          </div>
+          <div class="camera-controls">
+            <button id="btnSwitchCamera" class="btn btn-secondary btn-icon-round" title="تبديل الكاميرا">
+              🔄
+            </button>
+            <button id="btnSnapPhoto" class="btn-shutter" title="التقاط الصورة">
+              <span class="shutter-inner"></span>
+            </button>
+            <button id="btnCameraUploadFallback" class="btn btn-secondary btn-icon-round" title="اختيار من الملفات">
+              📁
+            </button>
+          </div>
+          <input type="file" id="cameraFallbackInput" accept="image/*" capture="environment" style="display: none;" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Image Zoom & Lightbox -->
+    <div id="modalImageZoom" class="modal-backdrop zoom-lightbox-backdrop" style="display: none;">
+      <div class="zoom-lightbox-window">
+        <!-- Close Button -->
+        <button class="btn-close-zoom" id="btnCloseImageZoom" title="إغلاق">&times;</button>
+        
+        <!-- Zoom Controls Header -->
+        <div class="zoom-toolbar">
+          <div class="zoom-title-badge" id="zoomModalTitle" dir="auto">معاينة الصورة</div>
+          <div class="zoom-actions">
+            <button type="button" class="btn-zoom-action" id="btnZoomOut" title="تصغير (-)">🔍−</button>
+            <span class="zoom-scale-indicator" id="zoomScaleLabel">100%</span>
+            <button type="button" class="btn-zoom-action" id="btnZoomIn" title="تكبير (+)">🔍+</button>
+            <button type="button" class="btn-zoom-action btn-zoom-reset" id="btnZoomReset" title="إعادة الضبط">🔄 إعادة ضبط</button>
+          </div>
+        </div>
+
+        <!-- Zoomable Image Viewport -->
+        <div class="zoom-viewport" id="zoomViewport">
+          <div class="zoom-stage" id="zoomStage">
+            <img id="zoomModalImg" src="" alt="معاينة الصورة بكامل الدقة" />
+          </div>
+        </div>
+        
+        <!-- Zoom Hint -->
+        <div class="zoom-footer-hint">
+          <span>💡 يمكنك أيضاً التكبير والتصغير بعجلة الفأرة أو اللمس والسحب</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: History & Frequency Analytics -->
+    <div id="modalHistory" class="modal-backdrop" style="display: none;">
+      <div class="modal-window modal-lg">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <span class="modal-badge-icon">📊</span>
+            <div>
+              <h3 class="modal-title">السجل الذكي & المقاضي الأكثر تكراراً</h3>
+              <p class="modal-subtitle">تحليل أنماط الشراء وإمكانية الضغط على أي قائمة لعرض تفاصيلها الكاملة.</p>
+            </div>
+          </div>
+          <button class="btn-close-modal" id="btnCloseHistoryModal">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Top Frequent Items Section -->
+          <div class="frequent-items-panel">
+            <div class="section-title-row">
+              <h4>🔥 أكثر الأغراض تكراراً (بناءً على مشترياتك السابقة)</h4>
+              <span class="hint-tag">اضغط (+) لإضافتها فوراً لسلتك الحالية</span>
+            </div>
+            <div id="frequentItemsChips" class="frequent-chips-wrap"></div>
+          </div>
+
+          <!-- History Shopping Lists -->
+          <div class="history-lists-panel">
+            <div class="section-title-row">
+              <h4>📜 سجل القوائم السابقة لهذا المنزل (اضغط لاستعراض التفاصيل)</h4>
+              <button id="btnSaveCurrentToHistory" class="btn btn-sm btn-outline">
+                💾 حفظ القائمة الحالية كنسخة في السجل
+              </button>
+            </div>
+            <div id="historyListContainer" class="history-list-cards"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Settings (Clean & User-friendly) -->
+    <div id="modalSettings" class="modal-backdrop" style="display: none;">
+      <div class="modal-window">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <span class="modal-badge-icon">⚙️</span>
+            <div>
+              <h3 class="modal-title">إعدادات المنصة</h3>
+              <p class="modal-subtitle">تخصيص رقم المنزل ومدة الاحتفاظ بالسجل.</p>
+            </div>
+          </div>
+          <button class="btn-close-modal" id="btnCloseSettingsModal">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Active Home Setting -->
+          <div class="settings-group">
+            <label class="settings-label">🏠 رقم المنزل الحالي (Home No.)</label>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <input type="text" id="settingHomeNoInput" class="form-input" dir="auto" />
+              <button id="btnSaveSettingHome" class="btn btn-secondary">تحديث</button>
+            </div>
+          </div>
+
+          <!-- Retention Setting -->
+          <div class="settings-group">
+            <label class="settings-label">⏱️ مدة الاحتفاظ بالبيانات في السجل</label>
+            <p class="settings-help">الافتراضي هو شهر واحد (30 يوماً). سيتم تصفية السجلات الأقدم تلقائياً.</p>
+            <select id="selectRetention" class="form-input">
+              <option value="7">أسبوع واحد (7 أيام)</option>
+              <option value="15">أسبوعين (15 يوماً)</option>
+              <option value="30" selected>شهر واحد (30 يوماً - الافتراضي)</option>
+              <option value="90">ثلاثة أشهر (90 يوماً)</option>
+              <option value="365">سنة كاملة</option>
+              <option value="forever">دائم (بدون حذف تلقائي)</option>
+            </select>
+          </div>
+
+          <!-- Status Card -->
+          <div class="settings-group" style="border-bottom: none;">
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 1rem; display: flex; align-items: center; gap: 0.75rem;">
+              <span style="font-size: 1.5rem;">⚡</span>
+              <div>
+                <strong style="color: #166534; font-size: 0.95rem; display: block;">المزامنة السحابية المباشرة نشطة</strong>
+                <span style="color: #15803d; font-size: 0.8rem;">يتم مزامنة أي مشتريات وتحديثات تلقائياً عبر السحابة في الوقت الفعلي.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
