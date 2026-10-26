@@ -209,7 +209,7 @@ const DEMO_ITEMS = [
     quantityFound: 1,
     unit: 'علبة',
     status: 'bought',
-    imageUrl: '/demo/WhatsApp Image 2026-10-26 at 2.08.53 AM.jpeg',
+    imageUrl: '/demo/demo1.jpeg',
     note: 'طازجة من قسم الأجبان',
     alternativeImageUrl: null,
     createdAt: new Date().toISOString()
@@ -221,7 +221,7 @@ const DEMO_ITEMS = [
     quantityFound: 1,
     unit: 'علبة',
     status: 'bought',
-    imageUrl: '/demo/WhatsApp Image 2026-10-26 at 2.08.53 AM (1).jpeg',
+    imageUrl: '/demo/demo2.jpeg',
     note: '',
     alternativeImageUrl: null,
     createdAt: new Date().toISOString()
@@ -233,7 +233,7 @@ const DEMO_ITEMS = [
     quantityFound: 0,
     unit: 'لتر',
     status: 'pending',
-    imageUrl: '/demo/WhatsApp Image 2026-10-26 at 2.08.54 AM.jpeg',
+    imageUrl: '/demo/demo3.jpeg',
     note: '',
     alternativeImageUrl: null,
     createdAt: new Date().toISOString()
@@ -245,7 +245,7 @@ const DEMO_ITEMS = [
     quantityFound: 0,
     unit: 'حبات',
     status: 'pending',
-    imageUrl: '/demo/WhatsApp Image 2026-10-26 at 2.08.54 AM (1).jpeg',
+    imageUrl: '/demo/demo4.jpeg',
     note: '',
     alternativeImageUrl: null,
     createdAt: new Date().toISOString()
@@ -257,9 +257,9 @@ const DEMO_ITEMS = [
     quantityFound: 1,
     unit: 'كيس',
     status: 'partial',
-    imageUrl: '/demo/WhatsApp Image 2026-10-26 at 2.08.54 AM (2).jpeg',
+    imageUrl: '/demo/demo5.jpeg',
     note: 'المطلوب كيسين، وجدنا كيس واحد فقط بالثلاجة',
-    alternativeImageUrl: '/demo/WhatsApp Image 2026-10-26 at 2.08.54 AM (2).jpeg',
+    alternativeImageUrl: '/demo/demo5.jpeg',
     createdAt: new Date().toISOString()
   },
   {
@@ -1782,7 +1782,7 @@ function renderCards() {
     if (displayImg) {
       imageHtml = `
         <div class="card-media-wrap">
-          <img src="${displayImg}" class="card-img" alt="${escapeHtml(item.name)}" title="🔍 اضغط لتكبير واستعراض الصورة بحجم كامل" data-zoom-src="${displayImg}" data-zoom-title="${escapeHtml(item.name)}" />
+          <img src="${displayImg}" class="card-img" alt="${escapeHtml(item.name)}" title="🔍 اضغط لتكبير واستعراض الصورة بحجم كامل" data-zoom-src="${displayImg}" data-zoom-title="${escapeHtml(item.name)}" onerror="this.onerror=null; this.src='/logo.png';" />
           <span class="card-status-badge ${statusClass}">${statusLabel}</span>
         </div>
       `;
@@ -1856,7 +1856,7 @@ function renderCards() {
             </button>
             ${item.alternativeImageUrl ? `
               <div class="sub-preview-chip">
-                <img src="${item.alternativeImageUrl}" alt="بديل" />
+                <img src="${item.alternativeImageUrl}" alt="بديل" onerror="this.onerror=null; this.src='/logo.png';" />
                 <button type="button" class="btn-remove-sub-img" data-id="${item.id}">&times;</button>
               </div>
             ` : ''}
@@ -2663,7 +2663,22 @@ function openImageZoom(imgSrc, title = '') {
   
   if (!modal || !imgEl) return;
 
-  imgEl.src = imgSrc;
+  const safeSrc = (typeof imgSrc === 'string' && imgSrc.startsWith('data:'))
+    ? imgSrc
+    : encodeURI(decodeURI(imgSrc));
+
+  imgEl.style.opacity = '0';
+  imgEl.style.transition = 'opacity 0.2s ease';
+  imgEl.onload = () => {
+    imgEl.style.opacity = '1';
+  };
+  imgEl.onerror = function() {
+    this.onerror = null;
+    this.src = '/logo.png';
+    this.style.opacity = '1';
+  };
+  imgEl.src = safeSrc;
+
   if (titleEl) {
     titleEl.textContent = title ? `🔍 ${title}` : (appState.lang === 'ar' ? 'معاينة الغرض' : 'Item Photo Preview');
   }
@@ -2676,7 +2691,12 @@ function openImageZoom(imgSrc, title = '') {
 
 function closeImageZoom() {
   const modal = document.getElementById('modalImageZoom');
+  const imgEl = document.getElementById('zoomModalImg');
   if (modal) modal.style.display = 'none';
+  if (imgEl) {
+    imgEl.src = '';
+    imgEl.style.opacity = '0';
+  }
 }
 
 function updateZoomTransform() {

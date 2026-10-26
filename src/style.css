@@ -3378,46 +3378,43 @@ html[dir="ltr"] .history-card-select-wrap {
   overflow: hidden;
 }
 
+.zoom-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.85rem 1.25rem;
+  background: rgba(15, 23, 42, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.zoom-toolbar-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
 .btn-close-zoom {
-  position: absolute;
-  top: 14px;
-  left: 18px;
-  z-index: 40;
   background: rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.25);
   color: #ffffff;
   font-size: 1.5rem;
   line-height: 1;
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all var(--transition-fast);
+  flex-shrink: 0;
 }
 
 .btn-close-zoom:hover {
   background: var(--danger-rose);
   border-color: var(--danger-rose);
   transform: scale(1.08);
-}
-
-html[dir="ltr"] .btn-close-zoom {
-  left: auto;
-  right: 18px;
-}
-
-.zoom-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem 1.5rem;
-  background: rgba(15, 23, 42, 0.95);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  flex-wrap: wrap;
 }
 
 .zoom-title-badge {
@@ -3543,23 +3540,22 @@ html[dir="ltr"] .btn-close-zoom {
   .nav-container {
     width: 100% !important;
     max-width: 100% !important;
-    gap: 0.65rem !important;
+    gap: 0.5rem !important;
     display: flex !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
   }
 
   .brand-group {
-    width: 100% !important;
     display: flex !important;
     align-items: center !important;
-    justify-content: space-between !important;
     gap: 0.5rem !important;
   }
 
   .brand-logo {
-    width: 36px !important;
-    height: 36px !important;
+    width: 38px !important;
+    height: 38px !important;
     border-radius: var(--radius-sm) !important;
     flex-shrink: 0 !important;
   }
@@ -3569,18 +3565,18 @@ html[dir="ltr"] .btn-close-zoom {
   }
 
   .brand-tagline {
-    font-size: 0.72rem !important;
+    display: none !important;
   }
 
   .connection-badge {
     padding: 0.15rem 0.45rem !important;
-    font-size: 0.68rem !important;
+    font-size: 0.65rem !important;
   }
 
   .home-user-pill {
     padding: 0.25rem 0.65rem !important;
     font-size: 0.78rem !important;
-    align-self: flex-start !important;
+    margin: 0 !important;
   }
 
   .home-label {
@@ -3592,33 +3588,54 @@ html[dir="ltr"] .btn-close-zoom {
     padding: 0.12rem 0.45rem !important;
   }
 
-  /* Horizontal scrolling nav actions */
+  /* Single neat row of icon buttons in header on mobile */
   .nav-actions {
     display: flex !important;
     flex-wrap: nowrap !important;
-    overflow-x: auto !important;
     width: 100% !important;
-    gap: 0.4rem !important;
-    padding-bottom: 2px !important;
-    -webkit-overflow-scrolling: touch !important;
-    scrollbar-width: none !important;
-  }
-
-  .nav-actions::-webkit-scrollbar {
-    display: none;
+    gap: 0.35rem !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding-top: 0.35rem !important;
+    border-top: 1px solid var(--border-light) !important;
+    overflow-x: visible !important;
   }
 
   .nav-actions .btn,
   .nav-actions .btn-whatsapp-nav,
   .nav-actions .theme-toggle-btn,
   .nav-actions .lang-btn {
-    padding: 0.35rem 0.65rem !important;
-    font-size: 0.78rem !important;
-    flex-shrink: 0 !important;
-    min-height: 34px !important;
+    flex: 1 !important;
+    min-width: 36px !important;
+    height: 38px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: var(--radius-md) !important;
   }
 
-  /* 2. Role Bar: compact & unpinned */
+  /* Hide labels in mobile header so only clean icons show */
+  #btnCompile .btn-label,
+  #btnHistory .btn-label,
+  #btnSettings .btn-label,
+  #langLabel,
+  #themeLabel,
+  #waNavLabel {
+    display: none !important;
+  }
+
+  .nav-actions .btn-icon,
+  .nav-actions .lang-flag,
+  .nav-actions .theme-icon,
+  .nav-actions .wa-nav-icon {
+    font-size: 1.25rem !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+  }
+
+  /* 2. Role Bar: Stacking roles vertically so وضع المتسوق is right below وضع المحضر */
   .role-bar-wrapper {
     position: relative !important;
     top: auto !important;
@@ -3632,30 +3649,58 @@ html[dir="ltr"] .btn-close-zoom {
     width: 100% !important;
     max-width: 100% !important;
     flex-direction: column !important;
-    gap: 0.5rem !important;
+    gap: 0.6rem !important;
     align-items: stretch !important;
   }
 
   .role-segmented-switch {
     width: 100% !important;
     display: flex !important;
+    flex-direction: column !important;
+    gap: 0.45rem !important;
+    background: #f1f5f9 !important;
+    padding: 0.35rem !important;
+    border-radius: var(--radius-lg) !important;
+  }
+
+  [data-theme="dark"] .role-segmented-switch {
+    background: #0d1e3d !important;
   }
 
   .role-btn {
-    flex: 1 !important;
-    padding: 0.45rem 0.4rem !important;
-    gap: 0.35rem !important;
-    justify-content: center !important;
-    text-align: center !important;
+    width: 100% !important;
+    flex: none !important;
+    padding: 0.65rem 0.85rem !important;
+    gap: 0.65rem !important;
+    justify-content: flex-start !important;
+    text-align: start !important;
+    border-radius: var(--radius-md) !important;
+  }
+
+  .role-btn-icon {
+    font-size: 1.35rem !important;
+    flex-shrink: 0 !important;
+  }
+
+  .role-btn-text {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.15rem !important;
   }
 
   .role-title {
-    font-size: 0.8rem !important;
-    white-space: nowrap !important;
+    font-size: 0.9rem !important;
+    font-weight: 800 !important;
+    white-space: normal !important;
+    display: block !important;
   }
 
   .role-hint {
-    display: none !important;
+    display: block !important;
+    font-size: 0.72rem !important;
+    color: var(--text-secondary) !important;
+    opacity: 0.85 !important;
+    white-space: normal !important;
   }
 
   .role-quick-actions {
@@ -3666,8 +3711,9 @@ html[dir="ltr"] .btn-close-zoom {
   #btnCreateNewList {
     width: 100% !important;
     justify-content: center !important;
-    padding: 0.6rem !important;
-    font-size: 0.88rem !important;
+    padding: 0.65rem 1rem !important;
+    font-size: 0.92rem !important;
+    font-weight: 800 !important;
   }
 
   /* 3. Main Content Container */
@@ -3725,6 +3771,55 @@ html[dir="ltr"] .btn-close-zoom {
 
   .stat-lbl {
     font-size: 0.65rem !important;
+  }
+
+  /* Analysis Banner (Alert & Finish Shopping on Mobile) */
+  .analysis-banner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.85rem !important;
+    padding: 1rem 0.9rem !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .analysis-banner .banner-content {
+    width: 100% !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 0.75rem !important;
+  }
+
+  .analysis-banner .banner-icon-badge {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 1.15rem !important;
+    flex-shrink: 0 !important;
+  }
+
+  .analysis-banner .banner-title {
+    font-size: 0.95rem !important;
+    line-height: 1.3 !important;
+  }
+
+  .analysis-banner .banner-desc {
+    font-size: 0.82rem !important;
+    line-height: 1.4 !important;
+  }
+
+  .analysis-banner .banner-actions {
+    width: 100% !important;
+  }
+
+  .analysis-banner .banner-actions button,
+  #btnQuickFinishFromBanner {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 0.65rem 1rem !important;
+    font-size: 0.9rem !important;
+    font-weight: 800 !important;
+    border-radius: var(--radius-md) !important;
+    box-sizing: border-box !important;
   }
 
   /* 5. Creation Panel & Tabs */
@@ -3809,34 +3904,43 @@ html[dir="ltr"] .btn-close-zoom {
     font-size: 0.78rem !important;
   }
 
-  /* 6. Filter Bar */
+  /* 6. Filter Bar: Grid of 3 columns so none of the 6 tabs are hidden */
   .filter-bar {
     width: 100% !important;
     max-width: 100% !important;
     flex-direction: column !important;
     align-items: stretch !important;
-    gap: 0.5rem !important;
+    gap: 0.6rem !important;
     overflow-x: hidden !important;
   }
 
   .filter-tabs {
-    display: flex !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 0.45rem !important;
     width: 100% !important;
-    overflow-x: auto !important;
-    padding-bottom: 3px !important;
-    scrollbar-width: none !important;
-    -webkit-overflow-scrolling: touch !important;
-    gap: 0.35rem !important;
-  }
-
-  .filter-tabs::-webkit-scrollbar {
-    display: none;
+    overflow-x: visible !important;
+    box-sizing: border-box !important;
   }
 
   .filter-btn {
-    padding: 0.35rem 0.65rem !important;
+    padding: 0.55rem 0.25rem !important;
     font-size: 0.76rem !important;
-    flex-shrink: 0 !important;
+    font-weight: 700 !important;
+    border-radius: var(--radius-md) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.25rem !important;
+    white-space: nowrap !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .filter-btn .count-badge {
+    padding: 0.08rem 0.35rem !important;
+    font-size: 0.68rem !important;
+    border-radius: var(--radius-full) !important;
   }
 
   .filter-search-box {
@@ -3910,11 +4014,18 @@ html[dir="ltr"] .btn-close-zoom {
     max-height: 100vh !important;
     overflow-x: hidden !important;
     padding: 1rem 0.75rem !important;
-    display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     margin: 0 !important;
     box-sizing: border-box !important;
+  }
+
+  /* Ensure hidden modals NEVER show when style="display: none" */
+  .modal-backdrop[style*="display: none"],
+  .home-login-backdrop[style*="display: none"],
+  .zoom-lightbox-backdrop[style*="display: none"],
+  [style*="display: none"] {
+    display: none !important;
   }
 
   .home-login-window,
@@ -3952,6 +4063,85 @@ html[dir="ltr"] .btn-close-zoom {
   .home-number-input {
     padding: 0.75rem 2.4rem 0.75rem 0.85rem !important;
     font-size: 0.95rem !important;
+  }
+
+  /* 9. Image Zoom Lightbox on Mobile: Full Screen, Clean Header, No Overlaps */
+  .zoom-lightbox-backdrop {
+    padding: 0 !important;
+    background: #000000 !important;
+  }
+
+  .zoom-lightbox-window {
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    max-width: 100vw !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    border: none !important;
+    margin: 0 !important;
+    background: #000000 !important;
+  }
+
+  .zoom-toolbar {
+    padding: calc(0.6rem + env(safe-area-inset-top, 0px)) 0.75rem 0.5rem !important;
+    gap: 0.45rem !important;
+    background: rgba(15, 23, 42, 0.98) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+  }
+
+  .zoom-toolbar-header-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+  }
+
+  .btn-close-zoom {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 1.3rem !important;
+    flex-shrink: 0 !important;
+  }
+
+  .zoom-title-badge {
+    font-size: 0.88rem !important;
+    padding: 0.25rem 0.65rem !important;
+    max-width: 75% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .zoom-actions {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    gap: 0.4rem !important;
+  }
+
+  .btn-zoom-action {
+    padding: 0.35rem 0.6rem !important;
+    font-size: 0.78rem !important;
+  }
+
+  .zoom-viewport {
+    flex: 1 !important;
+    background: #000000 !important;
+  }
+
+  .zoom-stage img {
+    max-width: 98vw !important;
+    max-height: 72vh !important;
+    object-fit: contain !important;
+    border-radius: 4px !important;
+    box-shadow: none !important;
+  }
+
+  .zoom-footer-hint {
+    padding: 0.45rem 0.6rem calc(0.6rem + env(safe-area-inset-bottom, 0px)) !important;
+    font-size: 0.72rem !important;
+    background: rgba(15, 23, 42, 0.98) !important;
   }
 }
 
