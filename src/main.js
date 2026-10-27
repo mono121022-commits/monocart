@@ -1207,14 +1207,32 @@ function setupEventListeners() {
     });
   });
 
-  // Single Item Form Add (With Multiline / Enter support)
+  // Single Item Form Add (With Multiline / Enter support & Clear X Button)
   const nameInput = document.getElementById('inputItemName');
+  const btnClearItemName = document.getElementById('btnClearItemNameInput');
+
   if (nameInput) {
+    nameInput.addEventListener('input', () => {
+      if (btnClearItemName) {
+        btnClearItemName.style.display = nameInput.value.trim().length > 0 ? 'flex' : 'none';
+      }
+    });
+
     nameInput.addEventListener('keydown', (e) => {
       // Enter without Ctrl allows normal newlines!
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         document.getElementById('formAddItem').requestSubmit();
+      }
+    });
+  }
+
+  if (btnClearItemName) {
+    btnClearItemName.addEventListener('click', () => {
+      if (nameInput) {
+        nameInput.value = '';
+        btnClearItemName.style.display = 'none';
+        nameInput.focus();
       }
     });
   }
@@ -1559,83 +1577,132 @@ function normalizeItemName(str) {
   });
 }
 
-// Multi-Image Batch Distribution with Deduplication & Instant Sync
+// Multi-Image Batch Distribution with Interactive Loader & Canvas Optimization
 function handleBatchFiles(files) {
   const imageFiles = files.filter(f => f.type.startsWith('image/'));
   if (imageFiles.length === 0) {
-    alert('يرجى اختيار ملفات صور صالحة.');
+    alert(appState.lang === 'ar' ? 'يرجى اختيار ملفات صور صالحة.' : 'Please select valid image files.');
     return;
   }
 
-  // Deduplication check against existing items
-  const existingNames = new Set((appState.currentList.items || []).map(it => normalizeItemName(it.name)));
-  (appState.currentList.items || []).forEach(it => {
-    if (it.fileName) existingNames.add(normalizeItemName(it.fileName));
-  });
+  // Open interactive loading modal immediately
+  const modal = document.getElementById('modalBatchLoading');
+  const titleEl = document.getElementById('batchLoadingTitle');
+  const subEl = document.getElementById('batchLoadingSubtitle');
+  const progressEl = document.getElementById('batchProgressBar');
+  const statusEl = document.getElementById('batchLoadingStatus');
 
-  const filesToAdd = [];
-  const duplicateFiles = [];
-
-  imageFiles.forEach((file) => {
-    let cleanName = file.name.replace(/\.[^/.]+$/, '').trim();
-    const rawFileName = file.name.trim();
-
-    const normClean = normalizeItemName(cleanName);
-    const normFile = normalizeItemName(rawFileName);
-
-    if (existingNames.has(normClean) || existingNames.has(normFile)) {
-      duplicateFiles.push(cleanName || rawFileName);
-    } else {
-      existingNames.add(normClean);
-      existingNames.add(normFile);
-      filesToAdd.push({ file, cleanName, rawFileName });
-    }
-  });
-
-  if (filesToAdd.length === 0) {
-    showToast(`⚠️ تم تجاهل جميع الصور لأنها مكررة وموجودة بالفعل: ${duplicateFiles.slice(0, 3).join('، ')}`);
-    return;
+  if (modal) {
+    modal.style.display = 'flex';
+    if (progressEl) progressEl.style.width = '10%';
+    if (titleEl) titleEl.textContent = 'جاري استلام وتجهيز الصور...';
+    if (subEl) subEl.textContent = `يتم معالجة وتوزيع ${imageFiles.length} صورة على كروت مقاضي مستقلة ✨`;
+    if (statusEl) statusEl.textContent = `0 من ${imageFiles.length} صورة`;
   }
 
-  let processedCount = 0;
-  const newItems = [];
+  // Compress and read image as JPEG data URL via HTML5 Canvas
+  function processAndCompressImage(file, index) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const MAX_DIM = 1200;
+          let w = img.width;
+          let h = img.height;
+          if (w > MAX_DIM || h > MAX_DIM) {
+            if (w > h) {
+              h = Math.round((h * MAX_DIM) / w);
+              w = MAX_DIM;
+            } else {
+              w = Math.round((w * MAX_DIM) / h);
+              h = MAX_DIM;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
 
-  filesToAdd.forEach(({ file, cleanName, rawFileName }, index) => {
-    readFileAsDataUrl(file, (dataUrl) => {
-      let finalName = cleanName;
-      if (cleanName.includes('WhatsApp')) {
-        finalName = `غرض مصور ${appState.currentList.items.length + index + 1}`;
-      }
+          // Infer clean item name from file name
+          let cleanName = file.name.replace(/\.[^/.]+$/, '').trim();
+          if (!cleanName || cleanName.includes('WhatsApp') || /^IMG[\s\d_]*$/i.test(cleanName) || /^photo[\s\d_]*$/i.test(cleanName) || /^\d+$/.test(cleanName)) {
+            cleanName = `غرض مصور ${appState.currentList.items.length + index + 1}`;
+          }
 
-      newItems.push({
-        id: generateId(),
-        name: finalName,
-        fileName: rawFileName,
-        quantityRequired: 1,
-        quantityFound: 0,
-        unit: 'حبة',
-        imageUrl: dataUrl,
-        alternativeImageUrl: null,
-        note: '',
-        status: 'pending',
-        createdAt: new Date().toISOString()
-      });
-
-      processedCount++;
-      if (processedCount === filesToAdd.length) {
-        appState.currentList.items = [...newItems, ...appState.currentList.items];
-        saveData();
-        renderApp();
-        syncBatchToSupabase(newItems);
-
-        if (duplicateFiles.length > 0) {
-          showToast(`✓ تم توزيع ${newItems.length} كروت جديدة، وتجاهل ${duplicateFiles.length} صورة مكررة (${duplicateFiles.slice(0, 2).join('، ')}${duplicateFiles.length > 2 ? '...' : ''})!`);
-        } else {
-          showToast(`🎉 تم توزيع ${newItems.length} صورة على كروت مستقلة بنجاح!`);
-        }
-      }
+          resolve({
+            id: generateId(),
+            name: cleanName,
+            fileName: file.name,
+            quantityRequired: 1,
+            quantityFound: 0,
+            unit: 'حبة',
+            imageUrl: dataUrl,
+            alternativeImageUrl: null,
+            note: '',
+            status: 'pending',
+            createdAt: new Date().toISOString()
+          });
+        };
+        img.onerror = () => {
+          resolve({
+            id: generateId(),
+            name: `غرض مصور ${appState.currentList.items.length + index + 1}`,
+            fileName: file.name,
+            quantityRequired: 1,
+            quantityFound: 0,
+            unit: 'حبة',
+            imageUrl: e.target.result,
+            alternativeImageUrl: null,
+            note: '',
+            status: 'pending',
+            createdAt: new Date().toISOString()
+          });
+        };
+        img.src = e.target.result;
+      };
+      reader.onerror = () => {
+        resolve(null);
+      };
+      reader.readAsDataURL(file);
     });
-  });
+  }
+
+  (async () => {
+    const newItems = [];
+    for (let i = 0; i < imageFiles.length; i++) {
+      const pct = Math.round(((i + 1) / imageFiles.length) * 100);
+      if (progressEl) progressEl.style.width = `${pct}%`;
+      if (statusEl) statusEl.textContent = `معالجة صورة ${i + 1} من ${imageFiles.length} (${pct}%)`;
+      if (titleEl) titleEl.textContent = `جاري تجهيز وتوزيع الصور (${i + 1}/${imageFiles.length})...`;
+
+      const item = await processAndCompressImage(imageFiles[i], i);
+      if (item) newItems.push(item);
+    }
+
+    if (newItems.length > 0) {
+      appState.currentList.items = [...newItems, ...appState.currentList.items];
+      saveData();
+      renderApp();
+      syncBatchToSupabase(newItems);
+    }
+
+    if (modal) {
+      if (titleEl) titleEl.textContent = `✓ تم تجهيز وتوزيع ${newItems.length} صور بنجاح!`;
+      if (subEl) subEl.textContent = 'أضيفت مباشرة إلى قائمة اليوم المفتوحة ✨';
+      if (progressEl) progressEl.style.width = '100%';
+
+      setTimeout(() => {
+        modal.style.display = 'none';
+        triggerConfetti();
+        showToast(`🎉 تم توزيع ${newItems.length} صور على كروت مقاضي مستقلة بنجاح!`);
+        const cardsSec = document.querySelector('.cards-section');
+        if (cardsSec) cardsSec.scrollIntoView({ behavior: 'smooth' });
+      }, 550);
+    }
+  })();
 }
 
 function compressImage(dataUrl, maxWidth, maxHeight, quality, callback) {
@@ -1711,6 +1778,23 @@ function switchToList(listId) {
   }
 }
 
+function deleteShoppingList(listId) {
+  if (!appState.homeLists) return;
+  appState.homeLists = appState.homeLists.filter(l => l.id !== listId);
+  if (appState.currentList.id === listId) {
+    appState.currentList = appState.homeLists[0] || {
+      id: generateId(),
+      name: 'قائمة جديدة',
+      homeNo: appState.homeNo,
+      createdAt: new Date().toISOString(),
+      items: []
+    };
+  }
+  saveData();
+  renderApp();
+  showToast('🗑️ تم حذف القائمة بنجاح!');
+}
+
 function isSameDay(d1, d2) {
   const date1 = new Date(d1);
   const date2 = new Date(d2);
@@ -1765,8 +1849,18 @@ function renderListsShelf() {
         chip.innerHTML = `
           <span class="list-chip-name" dir="auto">${isActive ? '✓ ' : ''}${escapeHtml(list.name)}</span>
           <span class="list-chip-count">${(list.items || []).length} صنف</span>
+          ${todayLists.length > 1 ? `<button type="button" class="chip-delete-btn" title="حذف القائمة">&times;</button>` : ''}
         `;
-        chip.addEventListener('click', () => switchToList(list.id));
+        chip.addEventListener('click', (e) => {
+          if (e.target.closest('.chip-delete-btn')) {
+            e.stopPropagation();
+            if (confirm(`هل أنت متأكد من حذف قائمة "${list.name}"؟`)) {
+              deleteShoppingList(list.id);
+            }
+            return;
+          }
+          switchToList(list.id);
+        });
         preparerChips.appendChild(chip);
       });
     }
@@ -2209,11 +2303,18 @@ function renderCards() {
   }
   emptyState.style.display = 'none';
 
-  filtered.forEach(item => {
+  filtered.forEach((item, itemIdx) => {
     const card = document.createElement('div');
     const isSelectedInHistory = isHistoryMode && selectedHistoryItemIds.has(item.id);
     card.className = `item-card status-${item.status} ${isSelectedInHistory ? 'is-selected-for-copy' : ''}`;
     card.dataset.id = item.id;
+
+    const itemNumber = itemIdx + 1;
+    const cornerBadgeHtml = `
+      <div class="card-corner-index" title="${lang === 'ar' ? 'صنف رقم' : 'Item #'} ${itemNumber}">
+        <span class="index-hash">#</span>${itemNumber}
+      </div>
+    `;
 
     let statusLabel = lang === 'ar' ? '⏳ قيد الشراء' : '⏳ Pending';
     let statusClass = 'badge-pending';
@@ -2339,6 +2440,7 @@ function renderCards() {
     const qtyDisplay = `${item.quantityRequired || 1} ${item.unit || ''}`.trim();
 
     card.innerHTML = `
+      ${cornerBadgeHtml}
       ${historySelectHtml}
       ${imageHtml}
       ${fileInputHtml}
@@ -3035,6 +3137,10 @@ async function downloadPdfReport() {
 // ============================================================================
 function openHistoryModal() {
   document.getElementById('modalHistory').style.display = 'flex';
+  const targetBadge = document.getElementById('historyTargetListName');
+  if (targetBadge) {
+    targetBadge.textContent = appState.currentList.name || (appState.lang === 'ar' ? 'قائمتك الحالية' : 'Current List');
+  }
   renderFrequencyAnalytics();
   renderHistoryLists();
 }
@@ -3071,6 +3177,7 @@ function renderFrequencyAnalytics() {
   container.querySelectorAll('.chip-add-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const name = e.target.dataset.name;
+      const targetListName = appState.currentList.name || (appState.lang === 'ar' ? 'قائمتك الحالية' : 'Current List');
       appState.currentList.items.unshift({
         id: generateId(),
         name,
@@ -3084,7 +3191,9 @@ function renderFrequencyAnalytics() {
       });
       saveData();
       renderApp();
-      showToast(`✓ تمت إضافة "${name}" للسلة بنجاح!`);
+      showToast(appState.lang === 'ar'
+        ? `✓ تمت إضافة "${name}" إلى قائمة [${targetListName}] المفتوحة بنجاح! 📝`
+        : `✓ Added "${name}" to open list [${targetListName}] successfully! 📝`);
     });
   });
 }

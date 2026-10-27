@@ -267,6 +267,7 @@
             <div class="form-row">
               <div class="input-group main-input-wrap">
                 <textarea id="inputItemName" class="form-input multi-item-textarea" rows="2" placeholder="اكتب غرضاً، أو اضغط Enter لكتابة أغراض متعددة سطر بسطر (مثلاً: جبنة براميلي [Enter] لبن نادك [Enter] بطاطس)..." dir="auto" required></textarea>
+                <button type="button" id="btnClearItemNameInput" class="btn-clear-input-x" title="مسح المكتوب" style="display: none;">&times;</button>
               </div>
               <div class="input-group qty-wrap">
                 <input type="number" id="inputItemQtyNum" class="form-input" placeholder="العدد" min="1" value="1" dir="auto" />
@@ -727,6 +728,15 @@
         </div>
 
         <div class="modal-body">
+          <!-- Active Open List Target Indicator -->
+          <div class="history-active-list-banner">
+            <span class="hab-icon">📥</span>
+            <div class="hab-text">
+              <span>سيتم إضافة أي صنف تختاره مباشرة إلى القائمة المفتوحة حالياً:</span>
+              <strong id="historyTargetListName" class="hab-target-badge">قائمتك الحالية</strong>
+            </div>
+          </div>
+
           <!-- Top Frequent Items Section -->
           <div class="frequent-items-panel">
             <div class="section-title-row">
@@ -870,6 +880,20 @@
             </button>
           </div>
         </form>
+      </div>
+    <!-- Interactive Modal: Batch Image Uploading & Processing (Attractive Loader) -->
+    <div id="modalBatchLoading" class="modal-backdrop batch-loading-backdrop" style="display: none;">
+      <div class="modal-window batch-loading-window">
+        <div class="batch-loader-graphic">
+          <div class="loader-pulse-ring"></div>
+          <div class="loader-icon-center">📸</div>
+        </div>
+        <h3 id="batchLoadingTitle" class="batch-loading-title">جاري استلام وتجهيز الصور...</h3>
+        <p id="batchLoadingSubtitle" class="batch-loading-subtitle">يتم توزيع كل صورة تلقائياً على كارت مستقل مع شيك ليست وملاحظات</p>
+        <div class="batch-progress-bar-wrap">
+          <div id="batchProgressBar" class="batch-progress-bar" style="width: 0%;"></div>
+        </div>
+        <div class="batch-loading-status" id="batchLoadingStatus">0 من 0 صورة</div>
       </div>
     </div>
   </div>
