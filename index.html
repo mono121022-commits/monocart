@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" data-theme="dark">
 
 <head>
   <meta charset="UTF-8" />
@@ -27,7 +27,7 @@
   <link rel="stylesheet" href="/src/style.css" />
 </head>
 
-<body>
+<body class="dark-mode">
   <!-- Initial Seamless Splash Screen (No Black Boxes) -->
   <div id="appSplashScreen" class="app-splash-screen">
     <div class="splash-content">
@@ -260,6 +260,15 @@
               <span class="stat-num" id="statRemaining">0</span>
               <span class="stat-lbl" data-i18n="pendingItems">باقي</span>
             </div>
+          </div>
+
+          <!-- Quick Access Compile & Print Button in Hero Stats -->
+          <div class="hero-compile-action-wrap">
+            <button type="button" id="btnCompileHero" class="btn-hero-compile" title="تجميع وطباعة المقاضي">
+              <span class="btn-compile-icon">📦</span>
+              <span class="btn-compile-text">تجميع وطباعة المقاضي (PDF / كولاج)</span>
+              <span class="btn-compile-badge">5 بالصف</span>
+            </button>
           </div>
         </div>
       </section>
@@ -852,105 +861,112 @@
               </div>
             </div>
           </div>
-          <!-- Modal: Edit Item (تعديل بيانات الغرض: الاسم، الصورة، الكمية، الوحدة، الملاحظات) -->
-          <div id="modalEditItem" class="modal-backdrop" style="display: none;">
-            <div class="modal-window modal-edit-item-window">
-              <div class="modal-header">
-                <div class="modal-title-wrap">
-                  <span class="modal-badge-icon">✏️</span>
-                  <div>
-                    <h3 class="modal-title">تعديل بيانات الغرض</h3>
-                    <p class="modal-subtitle">تعديل الاسم والكمية والصورة والملاحظات</p>
-                  </div>
-                </div>
-                <button class="btn-close-modal" id="btnCloseEditItemModal">&times;</button>
-              </div>
-              <form id="formEditItemModal" class="modal-body edit-item-form-body">
-                <input type="hidden" id="editItemId" />
+        </div>
+      </div>
+    </div>
 
-                <div class="form-input-stacked">
-                  <label for="editItemName">اسم الغرض:</label>
-                  <input type="text" id="editItemName" class="form-input" required dir="auto"
-                    placeholder="اسم الغرض..." />
-                </div>
-
-                <div class="edit-qty-unit-grid">
-                  <div class="form-input-stacked">
-                    <label for="editItemQty">الكمية المطلوبة (العدد):</label>
-                    <div class="edit-stepper-control">
-                      <button type="button" class="stepper-btn" id="btnEditQtyMinus">−</button>
-                      <input type="number" id="editItemQty" class="form-input edit-qty-input" min="1" value="1" required
-                        dir="auto" />
-                      <button type="button" class="stepper-btn" id="btnEditQtyPlus">+</button>
-                    </div>
-                  </div>
-
-                  <div class="form-input-stacked">
-                    <label for="editItemUnit">الوحدة:</label>
-                    <input type="text" id="editItemUnit" class="form-input" placeholder="علبة / كيس / كجم..."
-                      dir="auto" />
-                  </div>
-                </div>
-
-                <div class="form-input-stacked">
-                  <label for="editItemNote">الملاحظات:</label>
-                  <input type="text" id="editItemNote" class="form-input" placeholder="ملاحظة أو ماركة مفضلة..."
-                    dir="auto" />
-                </div>
-
-                <!-- Item Image preview & options -->
-                <div class="form-input-stacked">
-                  <label>صورة الغرض:</label>
-                  <div class="edit-photo-panel">
-                    <div class="edit-photo-preview-wrap">
-                      <img id="editItemPreviewImg" src="" alt="معاينة الغرض" class="edit-photo-thumb"
-                        style="display:none;" />
-                      <div id="editItemNoPhoto" class="edit-no-photo-box">لا توجد صورة مرفقة</div>
-                    </div>
-                    <div class="edit-photo-actions">
-                      <label class="btn btn-secondary btn-sm" for="fileEditItemInput" title="اختيار صورة من الجهاز">
-                        📁 اختيار صورة
-                        <input type="file" id="fileEditItemInput" accept="image/*" style="display:none" />
-                      </label>
-                      <button type="button" id="btnLaunchCameraEdit" class="btn btn-secondary btn-sm"
-                        title="فتح الكاميرا لالتقاط صورة">
-                        📸 لقطة كاميرا
-                      </button>
-                      <button type="button" id="btnRemoveEditPhoto" class="btn btn-ghost btn-sm text-danger"
-                        title="حذف الصورة">
-                        🗑️ إزالة الصورة
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="modal-footer-actions">
-                  <button type="button" class="btn btn-secondary" id="btnCancelEditItem">إلغاء</button>
-                  <button type="submit" class="btn btn-accent btn-lg">
-                    <span>💾 حفظ التعديلات</span>
-                  </button>
-                </div>
-              </form>
+    <!-- Modal: Edit Item (تعديل بيانات الغرض: الاسم، الصورة، الكمية، الوحدة، الملاحظات) -->
+    <div id="modalEditItem" class="modal-backdrop" style="display: none;">
+      <div class="modal-window modal-edit-item-window">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <span class="modal-badge-icon">✏️</span>
+            <div>
+              <h3 class="modal-title">تعديل بيانات الغرض</h3>
+              <p class="modal-subtitle">تعديل الاسم والكمية والصورة والملاحظات</p>
             </div>
-            <!-- Interactive Modal: Batch Image Uploading & Processing (Attractive Loader) -->
-            <div id="modalBatchLoading" class="modal-backdrop batch-loading-backdrop" style="display: none;">
-              <div class="modal-window batch-loading-window">
-                <div class="batch-loader-graphic">
-                  <div class="loader-pulse-ring"></div>
-                  <div class="loader-icon-center">📸</div>
-                </div>
-                <h3 id="batchLoadingTitle" class="batch-loading-title">جاري استلام وتجهيز الصور...</h3>
-                <p id="batchLoadingSubtitle" class="batch-loading-subtitle">يتم توزيع كل صورة تلقائياً على كارت مستقل مع
-                  شيك ليست وملاحظات</p>
-                <div class="batch-progress-bar-wrap">
-                  <div id="batchProgressBar" class="batch-progress-bar" style="width: 0%;"></div>
-                </div>
-                <div class="batch-loading-status" id="batchLoadingStatus">0 من 0 صورة</div>
+          </div>
+          <button class="btn-close-modal" id="btnCloseEditItemModal">&times;</button>
+        </div>
+        <form id="formEditItemModal" class="modal-body edit-item-form-body">
+          <input type="hidden" id="editItemId" />
+
+          <div class="form-input-stacked">
+            <label for="editItemName">اسم الغرض:</label>
+            <input type="text" id="editItemName" class="form-input" required dir="auto"
+              placeholder="اسم الغرض..." />
+          </div>
+
+          <div class="edit-qty-unit-grid">
+            <div class="form-input-stacked">
+              <label for="editItemQty">الكمية المطلوبة (العدد):</label>
+              <div class="edit-stepper-control">
+                <button type="button" class="stepper-btn" id="btnEditQtyMinus">−</button>
+                <input type="number" id="editItemQty" class="form-input edit-qty-input" min="1" value="1" required
+                  dir="auto" />
+                <button type="button" class="stepper-btn" id="btnEditQtyPlus">+</button>
+              </div>
+            </div>
+
+            <div class="form-input-stacked">
+              <label for="editItemUnit">الوحدة:</label>
+              <input type="text" id="editItemUnit" class="form-input" placeholder="علبة / كيس / كجم..."
+                dir="auto" />
+            </div>
+          </div>
+
+          <div class="form-input-stacked">
+            <label for="editItemNote">الملاحظات:</label>
+            <input type="text" id="editItemNote" class="form-input" placeholder="ملاحظة أو ماركة مفضلة..."
+              dir="auto" />
+          </div>
+
+          <!-- Item Image preview & options -->
+          <div class="form-input-stacked">
+            <label>صورة الغرض:</label>
+            <div class="edit-photo-panel">
+              <div class="edit-photo-preview-wrap">
+                <img id="editItemPreviewImg" src="" alt="معاينة الغرض" class="edit-photo-thumb"
+                  style="display:none;" />
+                <div id="editItemNoPhoto" class="edit-no-photo-box">لا توجد صورة مرفقة</div>
+              </div>
+              <div class="edit-photo-actions">
+                <label class="btn btn-secondary btn-sm" for="fileEditItemInput" title="اختيار صورة من الجهاز">
+                  📁 اختيار صورة
+                  <input type="file" id="fileEditItemInput" accept="image/*" style="display:none" />
+                </label>
+                <button type="button" id="btnLaunchCameraEdit" class="btn btn-secondary btn-sm"
+                  title="فتح الكاميرا لالتقاط صورة">
+                  📸 لقطة كاميرا
+                </button>
+                <button type="button" id="btnRemoveEditPhoto" class="btn btn-ghost btn-sm text-danger"
+                  title="حذف الصورة">
+                  🗑️ إزالة الصورة
+                </button>
               </div>
             </div>
           </div>
 
-          <script type="module" src="/src/main.js"></script>
+          <div class="modal-footer-actions">
+            <button type="button" class="btn btn-secondary" id="btnCancelEditItem">إلغاء</button>
+            <button type="submit" class="btn btn-accent btn-lg">
+              <span>💾 حفظ التعديلات</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Interactive Modal: Batch Image Uploading & Processing (Attractive Loader) -->
+    <div id="modalBatchLoading" class="modal-backdrop batch-loading-backdrop" style="display: none;">
+      <div class="modal-window batch-loading-window">
+        <div class="batch-loader-graphic">
+          <div class="loader-pulse-ring"></div>
+          <div class="loader-icon-center">📸</div>
+        </div>
+        <h3 id="batchLoadingTitle" class="batch-loading-title">جاري استلام وتجهيز الصور...</h3>
+        <p id="batchLoadingSubtitle" class="batch-loading-subtitle">يتم توزيع كل صورة تلقائياً على كارت مستقل مع
+          شيك ليست وملاحظات</p>
+        <div class="batch-progress-bar-wrap">
+          <div id="batchProgressBar" class="batch-progress-bar" style="width: 0%;"></div>
+        </div>
+        <div class="batch-loading-status" id="batchLoadingStatus">0 من 0 صورة</div>
+      </div>
+    </div>
+
+  </div> <!-- #app -->
+
+  <script type="module" src="/src/main.js"></script>
 </body>
 
 </html>

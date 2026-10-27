@@ -168,7 +168,7 @@ const THEME_KEY = 'monocart_theme';
 
 let appState = {
   lang: 'ar',
-  theme: 'light',
+  theme: 'dark',
   homeNo: '',
   userRole: 'reviewer',
   activeFilter: 'pending',
@@ -349,7 +349,7 @@ function initApp() {
 }
 
 function loadTheme() {
-  const saved = localStorage.getItem(THEME_KEY) || 'light';
+  const saved = localStorage.getItem(THEME_KEY) || 'dark';
   setTheme(saved);
 }
 
@@ -1537,6 +1537,8 @@ function normalizeItemName(str) {
 
   // Modal Openers & Closers
   document.getElementById('btnCompile').addEventListener('click', openCompileModal);
+  const btnCompileHero = document.getElementById('btnCompileHero');
+  if (btnCompileHero) btnCompileHero.addEventListener('click', openCompileModal);
   document.getElementById('btnHistory').addEventListener('click', openHistoryModal);
   document.getElementById('btnSettings').addEventListener('click', openSettingsModal);
 
@@ -3095,6 +3097,7 @@ function applyCapturedPhoto(dataUrl) {
 function openCompileModal() {
   document.getElementById('modalCompile').style.display = 'flex';
   generateCollageCanvas();
+  renderPdfPreview();
 }
 
 function generateCollageCanvas() {
@@ -3105,7 +3108,7 @@ function generateCollageCanvas() {
 
   let items = appState.currentList.items.filter(item => {
     if (onlyBought && item.status !== 'bought' && item.status !== 'partial') return false;
-    return !!(item.imageUrl || item.alternativeImageUrl);
+    return true; // Include all items (both images and text cards)
   });
 
   if (items.length === 0) {
@@ -3116,10 +3119,7 @@ function generateCollageCanvas() {
     ctx.fillStyle = '#0f172a';
     ctx.font = 'bold 20px Cairo, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('لا توجد صور متوفرة للمقاضي المحددة حالياً.', canvas.width / 2, 140);
-    ctx.font = '16px Cairo, sans-serif';
-    ctx.fillStyle = '#64748b';
-    ctx.fillText('أرفق صوراً للأغراض أو قم بإلغاء خيار "المشتراة فقط" لعرض كافة الصور.', canvas.width / 2, 180);
+    ctx.fillText('لا توجد مقاضي في هذه القائمة حالياً.', canvas.width / 2, 140);
     return;
   }
 
@@ -3149,8 +3149,60 @@ function generateCollageCanvas() {
 
   ctx.fillStyle = '#f97316';
   ctx.font = 'bold 18px Cairo, sans-serif';
-  const statsSummary = `عدد الصور: ${items.length} صور | التاريخ: ${new Date().toLocaleDateString('ar-EG')}`;
+  const statsSummary = `إجمالي الأصناف: ${items.length} صنف | التاريخ: ${new Date().toLocaleDateString('ar-EG')}`;
   ctx.fillText(statsSummary, canvas.width - padding, 95);
+
+  function drawItemDetails(item, index, x, y) {
+    ctx.strokeStyle = item.status === 'bought' ? '#10b981' : item.status === 'partial' ? '#f59e0b' : '#e2e8f0';
+    ctx.lineWidth = 4;
+    roundRect(ctx, x, y, tileWidth, tileHeight, 14);
+    ctx.stroke();
+
+    if (item.status === 'bought') {
+      ctx.fillStyle = '#10b981';
+      ctx.beginPath();
+      ctx.arc(x + 28, y + 28, 18, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 20px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('✓', x + 28, y + 35);
+    } else if (item.status === 'partial') {
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath();
+      ctx.arc(x + 28, y + 28, 18, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 16px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('⚠️', x + 28, y + 35);
+    }
+
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.arc(x + tileWidth - 28, y + 28, 16, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 14px Cairo, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`#${index + 1}`, x + tileWidth - 28, y + 34);
+
+    if (includeNames) {
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillRect(x, y + tileHeight + 4, tileWidth, labelHeight - 8);
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 18px Cairo, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(item.name, x + tileWidth / 2, y + tileHeight + 32);
+
+      const qtyText = item.status === 'partial' 
+        ? `(تم إيجاد ${item.quantityFound} من ${item.quantityRequired})`
+        : `${item.quantityRequired || 1} ${item.unit || ''}`;
+      ctx.fillStyle = item.status === 'partial' ? '#b45309' : '#f97316';
+      ctx.font = '14px Cairo, sans-serif';
+      ctx.fillText(qtyText, x + tileWidth / 2, y + tileHeight + 50);
+    }
+  }
 
   items.forEach((item, index) => {
     const colIndex = index % cols;
@@ -3159,58 +3211,37 @@ function generateCollageCanvas() {
     const x = padding + colIndex * (tileWidth + gap);
     const y = headerHeight + padding + rowIndex * (itemTotalHeight + gap);
 
-    const imgSrc = item.status === 'missing' && item.alternativeImageUrl ? item.alternativeImageUrl : item.imageUrl;
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      ctx.save();
+    const imgSrc = (item.status === 'substitute' && item.alternativeImageUrl)
+      ? item.alternativeImageUrl
+      : (item.imageUrl || (item.images && item.images.length > 0 ? item.images[0] : null));
+
+    if (imgSrc) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        ctx.save();
+        roundRect(ctx, x, y, tileWidth, tileHeight, 14);
+        ctx.clip();
+        ctx.drawImage(img, x, y, tileWidth, tileHeight);
+        ctx.restore();
+        drawItemDetails(item, index, x, y);
+      };
+      img.src = imgSrc;
+    } else {
+      ctx.fillStyle = '#f1f5f9';
       roundRect(ctx, x, y, tileWidth, tileHeight, 14);
-      ctx.clip();
-      ctx.drawImage(img, x, y, tileWidth, tileHeight);
-      ctx.restore();
+      ctx.fill();
 
-      ctx.strokeStyle = item.status === 'bought' ? '#10b981' : item.status === 'partial' ? '#f59e0b' : '#e2e8f0';
-      ctx.lineWidth = 4;
-      roundRect(ctx, x, y, tileWidth, tileHeight, 14);
-      ctx.stroke();
+      ctx.font = '54px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('🛒', x + tileWidth / 2, y + tileHeight / 2 - 10);
 
-      if (item.status === 'bought') {
-        ctx.fillStyle = '#10b981';
-        ctx.beginPath();
-        ctx.arc(x + 28, y + 28, 18, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 20px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('✓', x + 28, y + 35);
-      } else if (item.status === 'partial') {
-        ctx.fillStyle = '#f59e0b';
-        ctx.beginPath();
-        ctx.arc(x + 28, y + 28, 18, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 16px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('⚠️', x + 28, y + 35);
-      }
+      ctx.fillStyle = '#334155';
+      ctx.font = 'bold 20px Cairo, sans-serif';
+      ctx.fillText(item.name, x + tileWidth / 2, y + tileHeight / 2 + 45);
 
-      if (includeNames) {
-        ctx.fillStyle = '#f8fafc';
-        ctx.fillRect(x, y + tileHeight + 4, tileWidth, labelHeight - 8);
-        ctx.fillStyle = '#0f172a';
-        ctx.font = 'bold 18px Cairo, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(item.name, x + tileWidth / 2, y + tileHeight + 32);
-
-        const qtyText = item.status === 'partial' 
-          ? `(تم إيجاد ${item.quantityFound} من ${item.quantityRequired})`
-          : `${item.quantityRequired || 1} ${item.unit || ''}`;
-        ctx.fillStyle = item.status === 'partial' ? '#b45309' : '#f97316';
-        ctx.font = '14px Cairo, sans-serif';
-        ctx.fillText(qtyText, x + tileWidth / 2, y + tileHeight + 50);
-      }
-    };
-    img.src = imgSrc;
+      drawItemDetails(item, index, x, y);
+    }
   });
 }
 
@@ -3236,10 +3267,25 @@ function downloadCollageImage() {
   link.click();
 }
 
+// Helper: partition items into clean A4 page sheets
+function chunkItemsForPages(items) {
+  if (items.length <= 15) {
+    return [items];
+  }
+  const pages = [];
+  pages.push(items.slice(0, 10)); // Page 1: 10 items (spacious with hero header)
+  let cursor = 10;
+  while (cursor < items.length) {
+    pages.push(items.slice(cursor, cursor + 15)); // Subsequent pages: up to 15 items (3 rows of 5)
+    cursor += 15;
+  }
+  return pages;
+}
+
 function renderPdfPreview() {
-  const container = document.getElementById('pdfItemsListPreview');
-  const dateP = document.getElementById('pdfReportDate');
-  const badge = document.getElementById('pdfCompletionBadge');
+  const container = document.getElementById('pdfPreviewContent');
+  if (!container) return;
+
   const { currentList, viewingHistoryTrip, homeNo } = appState;
   const activeList = viewingHistoryTrip || currentList;
 
@@ -3248,7 +3294,6 @@ function renderPdfPreview() {
     month: 'long',
     day: 'numeric'
   });
-  dateP.textContent = `المنزل: #${homeNo || '101'} | سلة: ${activeList.name || 'أغراض اليوم'} | التاريخ: ${dateStr}`;
 
   const items = activeList.items || [];
   const total = items.length;
@@ -3258,108 +3303,169 @@ function renderPdfPreview() {
   const missing = items.filter(i => i.status === 'missing').length;
   const pending = items.filter(i => i.status === 'pending').length;
   const percent = total > 0 ? Math.round(((bought + substitute + partial * 0.5) / total) * 100) : 0;
-  badge.textContent = `نسبة الإنجاز: ${percent}% (تم: ${bought} | بدائل: ${substitute} | جزئي: ${partial} | معلقة: ${missing} | متبقي: ${pending})`;
 
   if (items.length === 0) {
-    container.innerHTML = '<div style="text-align:center;padding:2rem;color:#94a3b8;">لا توجد أصناف في هذه القائمة لتصديرها.</div>';
+    container.innerHTML = '<div style="text-align:center;padding:3rem;color:#94a3b8;font-size:1.1rem;">لا توجد أصناف في هذه القائمة لتصديرها.</div>';
     return;
   }
 
-  // 5 items per row grid layout with high quality image thumbnails and full Arabic & English text support
-  const tilesHtml = items.map((item, idx) => {
-    const displayImg = (item.status === 'substitute' && item.alternativeImageUrl) ? item.alternativeImageUrl : item.imageUrl;
-    const qtyStr = `${item.quantityRequired || 1} ${item.unit || ''}`.trim();
-    
-    let statusText = '⏳ متبقي للشراء';
-    let statusClass = 'pdf-tile-pending';
-    if (item.status === 'bought') {
-      statusText = '✓ تم بالكامل';
-      statusClass = 'pdf-tile-bought';
-    } else if (item.status === 'partial') {
-      statusText = `⚠️ شراء جزئي (${item.quantityFound || 1}/${item.quantityRequired || 1})`;
-      statusClass = 'pdf-tile-partial';
-    } else if (item.status === 'substitute') {
-      const subName = item.substituteName ? `: ${item.substituteName}` : '';
-      statusText = `🔄 بديل${subName}`;
-      statusClass = 'pdf-tile-substitute';
-    } else if (item.status === 'missing') {
-      statusText = '⏳ معلقة';
-      statusClass = 'pdf-tile-missing';
-    }
+  const pages = chunkItemsForPages(items);
+  const totalPages = pages.length;
+
+  const sheetsHtml = pages.map((pageItems, pageIdx) => {
+    const isFirstPage = pageIdx === 0;
+    const pageNum = pageIdx + 1;
+
+    const cardsHtml = pageItems.map((item, itemIdxOnPage) => {
+      const globalIdx = items.findIndex(x => x.id === item.id);
+      const displayIdx = globalIdx !== -1 ? (globalIdx + 1) : (pageIdx * 15 + itemIdxOnPage + 1);
+
+      const displayImg = (item.status === 'substitute' && item.alternativeImageUrl)
+        ? item.alternativeImageUrl
+        : (item.imageUrl || (item.images && item.images.length > 0 ? item.images[0] : null));
+
+      const qtyStr = `${item.quantityRequired || 1} ${item.unit || ''}`.trim();
+      
+      let statusText = '⏳ متبقي للشراء';
+      let statusClass = 'pdf-tile-pending';
+      if (item.status === 'bought') {
+        statusText = '✓ تم بالكامل';
+        statusClass = 'pdf-tile-bought';
+      } else if (item.status === 'partial') {
+        statusText = `⚠️ شراء جزئي (${item.quantityFound || 1}/${item.quantityRequired || 1})`;
+        statusClass = 'pdf-tile-partial';
+      } else if (item.status === 'substitute') {
+        const subName = item.substituteName ? `: ${item.substituteName}` : '';
+        statusText = `🔄 بديل${subName}`;
+        statusClass = 'pdf-tile-substitute';
+      } else if (item.status === 'missing') {
+        statusText = '⏳ معلقة';
+        statusClass = 'pdf-tile-missing';
+      }
+
+      return `
+        <div class="pdf-tile">
+          <div class="pdf-tile-header">
+            <span class="pdf-tile-num">#${displayIdx}</span>
+            <span class="pdf-tile-badge ${statusClass}">${statusText}</span>
+          </div>
+          ${displayImg ? `
+            <div class="pdf-tile-media">
+              <img src="${displayImg}" class="pdf-tile-thumb" alt="${escapeHtml(item.name)}" crossorigin="anonymous" />
+            </div>
+          ` : `
+            <div class="pdf-tile-media pdf-tile-placeholder">
+              <span class="pdf-placeholder-icon">🛒</span>
+              <span class="pdf-placeholder-qty">${escapeHtml(qtyStr)}</span>
+            </div>
+          `}
+          <div class="pdf-tile-info">
+            <div class="pdf-tile-name" dir="auto" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
+            <div class="pdf-tile-qty" dir="auto">${escapeHtml(qtyStr)}</div>
+            ${item.note ? `<div class="pdf-tile-note" dir="auto">📝 ${escapeHtml(item.note)}</div>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
 
     return `
-      <div class="pdf-tile">
-        ${displayImg ? `
-          <img src="${displayImg}" class="pdf-tile-thumb" alt="${escapeHtml(item.name)}" crossorigin="anonymous" />
+      <div class="pdf-page-sheet" data-page="${pageNum}">
+        ${isFirstPage ? `
+          <div class="pdf-page-header">
+            <div class="pdf-brand-row">
+              <div class="pdf-brand-title">
+                <h2>تقرير مقاضي مونو كارت 🛒</h2>
+                <span class="pdf-brand-sub">MonoCart Smart Groceries & Shopping Report</span>
+              </div>
+              <div class="pdf-completion-gauge-box">
+                <div class="pdf-completion-num">${percent}%</div>
+                <div class="pdf-completion-label">نسبة الإنجاز</div>
+              </div>
+            </div>
+            <div class="pdf-meta-row">
+              <span>🏠 المنزل: <strong>#${homeNo || '101'}</strong></span>
+              <span>📋 السلة: <strong>${escapeHtml(activeList.name || 'أغراض اليوم')}</strong></span>
+              <span>📅 التاريخ: <strong>${dateStr}</strong></span>
+              <span>📦 إجمالي المقاضي: <strong>${total} صنف</strong></span>
+            </div>
+            <div class="pdf-summary-stats-banner">
+              <div class="pdf-stat-pill stat-bought">✓ تم بالكامل: <strong>${bought}</strong></div>
+              <div class="pdf-stat-pill stat-substitute">🔄 بدائل: <strong>${substitute}</strong></div>
+              <div class="pdf-stat-pill stat-partial">⚠️ شراء جزئي: <strong>${partial}</strong></div>
+              <div class="pdf-stat-pill stat-missing">⏳ معلقة: <strong>${missing}</strong></div>
+              <div class="pdf-stat-pill stat-remaining">⏳ متبقي: <strong>${pending}</strong></div>
+            </div>
+          </div>
         ` : `
-          <div class="pdf-tile-placeholder">
-            <span>🛒</span>
+          <div class="pdf-compact-header">
+            <div class="pdf-compact-title">
+              <span>🛒 تقرير مقاضي مونو كارت - سلة: <strong>${escapeHtml(activeList.name || 'أغراض اليوم')}</strong> (#${homeNo || '101'})</span>
+            </div>
+            <div class="pdf-compact-meta">
+              <span>📅 التاريخ: ${dateStr}</span>
+              <span class="pdf-sheet-badge">صفحة ${pageNum} من ${totalPages}</span>
+            </div>
           </div>
         `}
-        <div class="pdf-tile-name" dir="auto">${idx + 1}. ${escapeHtml(item.name)}</div>
-        <div class="pdf-tile-qty" dir="auto">${escapeHtml(qtyStr)}</div>
-        <div class="pdf-tile-badge ${statusClass}" dir="auto">${statusText}</div>
-        ${item.note ? `<div class="pdf-tile-note" dir="auto">📝 ${escapeHtml(item.note)}</div>` : ''}
+
+        <div class="pdf-grid-5">
+          ${cardsHtml}
+        </div>
+
+        <div class="pdf-page-footer">
+          <span>مونو كارت - سلة المقاضي الذكية</span>
+          <span class="pdf-footer-page-num">صفحة ${pageNum} من ${totalPages}</span>
+          <span>MonoCart Platform &copy; ${new Date().getFullYear()}</span>
+        </div>
       </div>
     `;
   }).join('');
 
-  container.innerHTML = `
-    <div class="pdf-grid-5">
-      ${tilesHtml}
-    </div>
-  `;
+  container.innerHTML = sheetsHtml;
 }
 
 async function downloadPdfReport() {
-  const previewEl = document.getElementById('pdfPreviewContent');
-  if (!previewEl) return;
+  const pageSheets = Array.from(document.querySelectorAll('.pdf-page-sheet'));
+  if (pageSheets.length === 0) {
+    showToast('لا توجد صفحات لتصديرها');
+    return;
+  }
 
   const btn = document.getElementById('btnDownloadPdf');
   const originalText = btn.innerHTML;
-  btn.innerHTML = '⏳ جارِ استخراج ملف الـ PDF عالي الدقة (يرجى الانتظار ثواني)...';
+  btn.innerHTML = '⏳ جارِ استخراج صفحات الـ PDF (يرجى الانتظار ثواني)...';
   btn.disabled = true;
 
   try {
-    const canvas = await html2canvas(previewEl, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      logging: false,
-      backgroundColor: '#ffffff'
-    });
-
-    const imgData = canvas.toDataURL('image/jpeg', 0.95);
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
       format: 'a4'
     });
 
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const margin = 10;
-    const imgWidth = pageWidth - (margin * 2);
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
 
-    let heightLeft = imgHeight;
-    let position = margin;
+    for (let i = 0; i < pageSheets.length; i++) {
+      const sheet = pageSheets[i];
+      const canvas = await html2canvas(sheet, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
 
-    pdf.addImage(imgData, 'JPEG', margin, position, imgWidth, imgHeight);
-    heightLeft -= (pageHeight - (margin * 2));
-
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight + margin;
-      pdf.addPage();
-      pdf.addImage(imgData, 'JPEG', margin, position, imgWidth, imgHeight);
-      heightLeft -= (pageHeight - (margin * 2));
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      if (i > 0) pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
     }
 
     const { homeNo, currentList, viewingHistoryTrip } = appState;
     const activeList = viewingHistoryTrip || currentList;
     const safeTitle = (activeList.name || 'تقرير_المقاضي').replace(/[^a-zA-Z0-9_\u0600-\u06FF]/g, '_');
     pdf.save(`MonoCart_${safeTitle}_منزل_${homeNo || '101'}_${Date.now()}.pdf`);
-    showToast('✓ تم استخراج وتحميل ملف الـ PDF بنجاح مع دعم كامل للعربية والصور!');
+    showToast('✓ تم استخراج وتحميل ملف الـ PDF بنجاح 5 كروت بالصف بدون أي تقطيع!');
   } catch (err) {
     console.error('PDF generation error', err);
     showToast('حدث خطأ أثناء استخراج الـ PDF');
