@@ -411,8 +411,8 @@ function setRole(role, notify = true) {
   const btnFinishShopping = document.getElementById('btnFinishShopping');
 
   if (role === 'shopper') {
-    btnShopper.classList.add('active');
-    btnReviewer.classList.remove('active');
+    if (btnShopper) btnShopper.classList.add('active');
+    if (btnReviewer) btnReviewer.classList.remove('active');
     document.body.classList.add('mode-shopper');
     document.body.classList.remove('mode-reviewer');
     if (rolePill) {
@@ -423,10 +423,11 @@ function setRole(role, notify = true) {
     if (creationPanel) creationPanel.style.display = 'none';
     if (btnCreateNewList) btnCreateNewList.style.display = 'none';
     if (btnFinishShopping) btnFinishShopping.style.display = 'inline-flex';
+    setActiveFilter('pending');
     if (notify) showToast('🛒 تم التبديل إلى وضع المتسوق في السوبرماركت');
   } else {
-    btnReviewer.classList.add('active');
-    btnShopper.classList.remove('active');
+    if (btnReviewer) btnReviewer.classList.add('active');
+    if (btnShopper) btnShopper.classList.remove('active');
     document.body.classList.add('mode-reviewer');
     document.body.classList.remove('mode-shopper');
     if (rolePill) {
@@ -437,10 +438,10 @@ function setRole(role, notify = true) {
     if (creationPanel) creationPanel.style.display = 'block';
     if (btnCreateNewList) btnCreateNewList.style.display = 'inline-flex';
     if (btnFinishShopping) btnFinishShopping.style.display = 'none';
+    setActiveFilter('all');
     if (notify) showToast('📝 تم التبديل إلى وضع المُحضّر في البيت');
   }
 
-  setActiveFilter('pending');
   renderApp();
 }
 
@@ -544,7 +545,6 @@ async function loadHomeData(homeNumber, isUserSwitch) {
         createdAt: new Date().toISOString(),
         items: []
       };
-      saveData();
     }
 
     const savedHistory = localStorage.getItem(historyKey);
@@ -555,6 +555,24 @@ async function loadHomeData(homeNumber, isUserSwitch) {
       saveHistory();
     }
   }
+
+  // Load or initialize homeLists for this home
+  const listsKey = `monocart_lists_home_${homeNumber}`;
+  const savedHomeLists = localStorage.getItem(listsKey);
+  if (savedHomeLists) {
+    try {
+      appState.homeLists = JSON.parse(savedHomeLists);
+    } catch (e) {
+      appState.homeLists = [];
+    }
+  } else {
+    appState.homeLists = [];
+  }
+
+  if (!appState.homeLists.some(l => l.id === appState.currentList.id)) {
+    appState.homeLists.unshift(appState.currentList);
+  }
+  saveData();
 
   applyRetentionPolicy();
   renderApp();
@@ -569,8 +587,20 @@ async function loadHomeData(homeNumber, isUserSwitch) {
 function saveData() {
   if (!appState.homeNo) return;
   const storageKey = `monocart_data_home_${appState.homeNo}`;
+  const listsKey = `monocart_lists_home_${appState.homeNo}`;
+
+  // Keep homeLists in sync
+  if (!appState.homeLists) appState.homeLists = [];
+  const idx = appState.homeLists.findIndex(l => l.id === appState.currentList.id);
+  if (idx >= 0) {
+    appState.homeLists[idx] = appState.currentList;
+  } else {
+    appState.homeLists.unshift(appState.currentList);
+  }
+
   try {
     localStorage.setItem(storageKey, JSON.stringify(appState.currentList));
+    localStorage.setItem(listsKey, JSON.stringify(appState.homeLists));
   } catch (err) {
     console.warn('LocalStorage quota limit reached, saving optimized state', err);
     try {
@@ -686,14 +716,16 @@ async function initSupabase() {
       if (error && error.code === 'PGRST205') {
         appState.tablesExistInSupabase = false;
         if (badge) {
-          badge.className = 'connection-badge status-supabase';
-          badge.querySelector('.status-text').textContent = 'مزامنة سحابية نشطة';
+          const st = badge.querySelector('.status-text');
+          if (st) st.textContent = 'مزامنة سحابية نشطة';
+          badge.title = 'مزامنة سحابية نشطة';
         }
       } else {
         appState.tablesExistInSupabase = true;
         if (badge) {
-          badge.className = 'connection-badge status-supabase';
-          badge.querySelector('.status-text').textContent = i18n[appState.lang].statusSupabase;
+          const st = badge.querySelector('.status-text');
+          if (st) st.textContent = i18n[appState.lang].statusSupabase;
+          badge.title = i18n[appState.lang].statusSupabase;
         }
         if (appState.homeNo) {
           syncToSupabase();
@@ -1035,6 +1067,97 @@ function setupEventListeners() {
     }
     closeModal('modalNewList');
   });
+
+  // Quick Add List Button from Shelf Bar
+  const btnAddNewQuick = document.getElementById('btnAddNewListQuick');
+  if (btnAddNewQuick) {
+    btnAddNewQuick.addEventListener('click', () => {
+      document.getElementById('modalNewList').style.display = 'flex';
+      document.getElementById('inputNewListName').focus();
+    });
+  }
+
+  // Edit Item Modal Handlers
+  const btnCloseEditModal = document.getElementById('btnCloseEditItemModal');
+  if (btnCloseEditModal) btnCloseEditModal.addEventListener('click', () => closeModal('modalEditItem'));
+
+  const btnCancelEdit = document.getElementById('btnCancelEditItem');
+  if (btnCancelEdit) btnCancelEdit.addEventListener('click', () => closeModal('modalEditItem'));
+
+  const btnEditMinus = document.getElementById('btnEditQtyMinus');
+  if (btnEditMinus) {
+    btnEditMinus.addEventListener('click', () => {
+      const inp = document.getElementById('editItemQty');
+      const cur = parseInt(inp.value) || 1;
+      if (cur > 1) inp.value = cur - 1;
+    });
+  }
+
+  const btnEditPlus = document.getElementById('btnEditQtyPlus');
+  if (btnEditPlus) {
+    btnEditPlus.addEventListener('click', () => {
+      const inp = document.getElementById('editItemQty');
+      const cur = parseInt(inp.value) || 1;
+      inp.value = cur + 1;
+    });
+  }
+
+  const fileEditInput = document.getElementById('fileEditItemInput');
+  if (fileEditInput) {
+    fileEditInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        readFileAsDataUrl(file, (dataUrl) => {
+          editModalImageDataUrl = dataUrl;
+          updateEditModalPhotoPreview();
+        });
+      }
+    });
+  }
+
+  const btnRemoveEditImg = document.getElementById('btnRemoveEditPhoto');
+  if (btnRemoveEditImg) {
+    btnRemoveEditImg.addEventListener('click', () => {
+      editModalImageDataUrl = null;
+      updateEditModalPhotoPreview();
+    });
+  }
+
+  const btnLaunchCameraEdit = document.getElementById('btnLaunchCameraEdit');
+  if (btnLaunchCameraEdit) {
+    btnLaunchCameraEdit.addEventListener('click', () => {
+      appState.cameraTargetItemId = 'EDIT_MODAL';
+      appState.cameraMode = 'item';
+      openCameraModal();
+    });
+  }
+
+  const formEditItem = document.getElementById('formEditItemModal');
+  if (formEditItem) {
+    formEditItem.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const itemId = document.getElementById('editItemId').value;
+      const item = (appState.currentList.items || []).find(i => i.id === itemId);
+      if (!item) return;
+
+      const name = document.getElementById('editItemName').value.trim();
+      const qty = parseInt(document.getElementById('editItemQty').value) || 1;
+      const unit = document.getElementById('editItemUnit').value.trim();
+      const note = document.getElementById('editItemNote').value.trim();
+
+      item.name = name;
+      item.quantityRequired = qty;
+      item.unit = unit;
+      item.note = note;
+      item.imageUrl = editModalImageDataUrl;
+
+      saveData();
+      renderApp();
+      syncSingleItemToSupabase(item);
+      closeModal('modalEditItem');
+      showToast(`✓ تم تحديث بيانات "${item.name}" بنجاح!`);
+    });
+  }
 
   // Finish Shopping Trip Buttons
   document.getElementById('btnFinishShopping').addEventListener('click', openFinishTripModal);
@@ -1555,14 +1678,10 @@ function readFileAsDataUrl(file, callback) {
 }
 
 // ============================================================================
-// New Shopping List & Finish Trip Operations
+// Lists Management, Open Lists Shelf & Full Item Editing
 // ============================================================================
 function createNewShoppingList(listName) {
-  if (appState.currentList.items.length > 0) {
-    saveCurrentListToHistory(false);
-  }
-
-  appState.currentList = {
+  const newList = {
     id: generateId(),
     name: listName,
     homeNo: appState.homeNo,
@@ -1570,9 +1689,156 @@ function createNewShoppingList(listName) {
     items: []
   };
 
+  if (!appState.homeLists) appState.homeLists = [];
+  appState.homeLists.unshift(newList);
+  appState.currentList = newList;
+  appState.viewingHistoryTrip = null;
+
   saveData();
   renderApp();
   showToast(`✨ تم بدء سلة مقاضي جديدة: "${listName}"`);
+}
+
+function switchToList(listId) {
+  if (!appState.homeLists) return;
+  const target = appState.homeLists.find(l => l.id === listId);
+  if (target) {
+    appState.currentList = target;
+    appState.viewingHistoryTrip = null;
+    saveData();
+    renderApp();
+    showToast(`📋 تم فتح قائمة: "${target.name}"`);
+  }
+}
+
+function isSameDay(d1, d2) {
+  const date1 = new Date(d1);
+  const date2 = new Date(d2);
+  return date1.getFullYear() === date2.getFullYear() &&
+         date1.getMonth() === date2.getMonth() &&
+         date1.getDate() === date2.getDate();
+}
+
+function getRelativeDateLabel(dateStr) {
+  const d = new Date(dateStr);
+  const now = new Date();
+  if (isSameDay(d, now)) return 'اليوم';
+  
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (isSameDay(d, yesterday)) return 'أمس';
+
+  const diffDays = Math.round((now - d) / (1000 * 60 * 60 * 24));
+  if (diffDays > 0 && diffDays < 7) return `منذ ${diffDays} أيام`;
+  return d.toLocaleDateString('ar-EG', { month: 'numeric', day: 'numeric' });
+}
+
+function renderListsShelf() {
+  const preparerBar = document.getElementById('preparerListsBar');
+  const shopperBar = document.getElementById('shopperListsBar');
+  const preparerChips = document.getElementById('preparerListsChips');
+  const shopperChips = document.getElementById('shopperListsChips');
+
+  if (!appState.homeLists) appState.homeLists = [appState.currentList];
+
+  // Ensure currentList is in homeLists
+  if (!appState.homeLists.some(l => l.id === appState.currentList.id)) {
+    appState.homeLists.unshift(appState.currentList);
+  }
+
+  if (appState.userRole === 'reviewer') {
+    if (preparerBar) preparerBar.style.display = 'flex';
+    if (shopperBar) shopperBar.style.display = 'none';
+
+    if (preparerChips) {
+      preparerChips.innerHTML = '';
+      const now = new Date();
+      let todayLists = appState.homeLists.filter(l => isSameDay(l.createdAt, now));
+      if (todayLists.length === 0) {
+        todayLists = [appState.currentList];
+      }
+
+      todayLists.forEach(list => {
+        const isActive = list.id === appState.currentList.id && !appState.viewingHistoryTrip;
+        const chip = document.createElement('div');
+        chip.className = `list-chip-item ${isActive ? 'active' : ''}`;
+        chip.innerHTML = `
+          <span class="list-chip-name" dir="auto">${isActive ? '✓ ' : ''}${escapeHtml(list.name)}</span>
+          <span class="list-chip-count">${(list.items || []).length} صنف</span>
+        `;
+        chip.addEventListener('click', () => switchToList(list.id));
+        preparerChips.appendChild(chip);
+      });
+    }
+  } else {
+    // Shopper Mode: Recent prepared lists (today, yesterday, or few days ago)
+    if (preparerBar) preparerBar.style.display = 'none';
+    if (shopperBar) shopperBar.style.display = 'flex';
+
+    if (shopperChips) {
+      shopperChips.innerHTML = '';
+      const recentLists = [...appState.homeLists].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 8);
+
+      recentLists.forEach(list => {
+        const isActive = list.id === appState.currentList.id && !appState.viewingHistoryTrip;
+        const total = (list.items || []).length;
+        const bought = (list.items || []).filter(i => i.status === 'bought').length;
+        const pct = total > 0 ? Math.round((bought / total) * 100) : 0;
+        const relDate = getRelativeDateLabel(list.createdAt);
+
+        const chip = document.createElement('div');
+        chip.className = `list-chip-item ${isActive ? 'active' : ''}`;
+        chip.innerHTML = `
+          <span class="list-chip-name" dir="auto">${isActive ? '🛒 ' : ''}${escapeHtml(list.name)}</span>
+          <span class="list-chip-date">📅 ${relDate}</span>
+          <span class="list-chip-count">${total} أغراض (${pct}%)</span>
+        `;
+        chip.addEventListener('click', () => switchToList(list.id));
+        shopperChips.appendChild(chip);
+      });
+    }
+  }
+}
+
+// Full Edit Modal State
+let currentEditingItemId = null;
+let editModalImageDataUrl = null;
+
+function openEditItemModal(itemId) {
+  const item = (appState.currentList.items || []).find(i => i.id === itemId);
+  if (!item) return;
+
+  currentEditingItemId = itemId;
+  editModalImageDataUrl = item.imageUrl || null;
+
+  document.getElementById('editItemId').value = item.id;
+  document.getElementById('editItemName').value = item.name || '';
+  document.getElementById('editItemQty').value = item.quantityRequired || 1;
+  document.getElementById('editItemUnit').value = item.unit || '';
+  document.getElementById('editItemNote').value = item.note || '';
+
+  updateEditModalPhotoPreview();
+
+  const modal = document.getElementById('modalEditItem');
+  if (modal) modal.style.display = 'flex';
+}
+
+function updateEditModalPhotoPreview() {
+  const imgEl = document.getElementById('editItemPreviewImg');
+  const noPhotoEl = document.getElementById('editItemNoPhoto');
+  if (editModalImageDataUrl) {
+    if (imgEl) {
+      imgEl.src = editModalImageDataUrl;
+      imgEl.style.display = 'block';
+    }
+    if (noPhotoEl) noPhotoEl.style.display = 'none';
+  } else {
+    if (imgEl) {
+      imgEl.src = '';
+      imgEl.style.display = 'none';
+    }
+    if (noPhotoEl) noPhotoEl.style.display = 'block';
+  }
 }
 
 function openFinishTripModal() {
@@ -1908,35 +2174,12 @@ function renderApp() {
   circle.style.strokeDashoffset = offset;
   document.getElementById('progressPercent').textContent = percent + '%';
 
-  const banner = document.getElementById('analysisBanner');
-  const bannerTitle = document.getElementById('analysisTitle');
-  const bannerDesc = document.getElementById('analysisDesc');
-  const bannerIcon = document.getElementById('analysisIcon');
-
-  if (total > 0 && !isHistoryMode) {
-    banner.style.display = 'flex';
-    if (percent === 100) {
-      banner.className = 'analysis-banner banner-completed';
-      bannerIcon.textContent = '🎉';
-      bannerTitle.textContent = t.allDoneTitle;
-      bannerDesc.textContent = t.allDoneDesc;
-    } else if (missing > 0 || partial > 0) {
-      banner.className = 'analysis-banner banner-warning';
-      bannerIcon.textContent = '⚠️';
-      bannerTitle.textContent = t.missingAlertTitle;
-      bannerDesc.textContent = t.missingAlertDesc(missing, partial);
-    } else {
-      banner.className = 'analysis-banner banner-progress';
-      bannerIcon.textContent = '📊';
-      bannerTitle.textContent = lang === 'ar' ? 'حالة سلة المقاضي' : 'Shopping Basket Progress';
-      bannerDesc.textContent = lang === 'ar'
-        ? `تم شراء ${bought} بالكامل، و ${substitute} بدائل، و ${partial} جزئياً من أصل ${total} غرض (${percent}%).`
-        : `Completed ${bought} fully, ${substitute} substitutes, and ${partial} partially of ${total} items (${percent}%).`;
-    }
-  } else {
-    banner.style.display = 'none';
+  const countPill = document.getElementById('preparerItemsCountPill');
+  if (countPill) {
+    countPill.textContent = `📝 ${total} أغراض محضرة`;
   }
 
+  renderListsShelf();
   renderCards();
 }
 
@@ -2106,7 +2349,7 @@ function renderCards() {
         </div>
         ${noteHtml}
         
-        <!-- 4 Action Buttons with Pure CSS Art Icons -->
+        <!-- 4 Action Buttons with Pure CSS Art Icons (Visible in Shopper Mode) -->
         <div class="card-check-actions-4">
           <button class="btn-check-bought ${item.status === 'bought' ? 'active' : ''}" title="${t.boughtBtn}" ${isHistoryMode ? 'disabled' : ''}>
             <span class="css-art-icon css-art-check"></span> <span>${t.boughtBtn}</span>
@@ -2125,12 +2368,28 @@ function renderCards() {
         ${partialBoxHtml}
         ${substituteBoxHtml}
 
+        <!-- Preparer Actions (Visible in Preparer Mode) -->
+        <div class="preparer-card-actions">
+          <div class="preparer-qty-stepper" title="تعديل الكمية المطلوبة سريعاً">
+            <button type="button" class="stepper-btn-mini btn-prep-minus" data-id="${item.id}" title="إنقاص الكمية">−</button>
+            <span class="preparer-qty-label">${item.quantityRequired || 1} ${escapeHtml(item.unit || '')}</span>
+            <button type="button" class="stepper-btn-mini btn-prep-plus" data-id="${item.id}" title="زيادة الكمية">+</button>
+          </div>
+          <div class="preparer-btn-group">
+            <button type="button" class="btn-card-edit-full" data-id="${item.id}" title="تعديل تفاصيل الغرض">
+              <span>✏️ تعديل كامل</span>
+            </button>
+            <button type="button" class="btn-card-del" data-id="${item.id}" title="حذف الغرض">
+              <span>🗑️</span>
+            </button>
+          </div>
+        </div>
+
         ${!isHistoryMode ? `
-          <div class="card-footer-utils">
+          <div class="card-footer-utils shopper-only-utils">
             <button type="button" class="btn-card-attach-photo" title="${t.attachPhotoBtn}" onclick="document.getElementById('cardFileInput_${item.id}').click()">
               <span class="cam-icon">📸</span> <span>${t.attachPhotoBtn}</span>
             </button>
-            <button class="btn-card-del" title="${lang === 'ar' ? 'حذف الغرض' : 'Delete item'}">🗑️</button>
           </div>
         ` : ''}
       </div>
@@ -2142,6 +2401,40 @@ function renderCards() {
 }
 
 function attachCardListeners(card, item, isHistoryMode) {
+  // Preparer Card Steppers (+ and -)
+  const btnPrepMinus = card.querySelector('.btn-prep-minus');
+  if (btnPrepMinus) {
+    btnPrepMinus.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const cur = item.quantityRequired || 1;
+      if (cur > 1) {
+        item.quantityRequired = cur - 1;
+        saveData();
+        renderApp();
+        syncSingleItemToSupabase(item);
+      }
+    });
+  }
+
+  const btnPrepPlus = card.querySelector('.btn-prep-plus');
+  if (btnPrepPlus) {
+    btnPrepPlus.addEventListener('click', (e) => {
+      e.stopPropagation();
+      item.quantityRequired = (item.quantityRequired || 1) + 1;
+      saveData();
+      renderApp();
+      syncSingleItemToSupabase(item);
+    });
+  }
+
+  // Full Edit Modal Button
+  const btnEditFull = card.querySelector('.btn-card-edit-full');
+  if (btnEditFull) {
+    btnEditFull.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openEditItemModal(item.id);
+    });
+  }
   // Image Zoom on click
   const cardImg = card.querySelector('.card-img');
   if (cardImg) {
@@ -2430,6 +2723,12 @@ function snapCameraPhoto() {
 }
 
 function applyCapturedPhoto(dataUrl) {
+  if (appState.cameraTargetItemId === 'EDIT_MODAL') {
+    editModalImageDataUrl = dataUrl;
+    updateEditModalPhotoPreview();
+    showToast('📸 تم التقاط الصورة بنجاح!');
+    return;
+  }
   if (appState.cameraMode === 'singleForm') {
     const preview = document.getElementById('singlePhotoPreview');
     const img = document.getElementById('singlePhotoImg');

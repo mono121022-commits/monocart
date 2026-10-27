@@ -38,15 +38,14 @@
     <header class="navbar">
       <div class="nav-container">
         <div class="brand-group">
-          <div class="brand-logo">
+          <div class="brand-logo" title="مونو كارت MonoCart">
             <img src="/logo.png" class="brand-logo-img" alt="MonoCart Logo" />
           </div>
           <div class="brand-text">
             <div class="brand-title-row">
               <h1 class="brand-title" id="appTitle">مونو كارت</h1>
-              <span id="supabaseStatus" class="connection-badge status-supabase" title="حالة المزامنة السحابية">
+              <span id="supabaseStatus" class="connection-dot-indicator status-supabase" title="مزامنة سحابية مباشرة نشطة">
                 <span class="pulse-dot"></span>
-                <span class="status-text">مزامنة سحابية</span>
               </span>
             </div>
             <p class="brand-tagline" id="appTagline">سلة المقاضي الذكية</p>
@@ -100,16 +99,16 @@
     <!-- Role Switcher & Trip Action Bar (المحضّر بالبيت vs المتسوق بالسوبرماركت) -->
     <div class="role-bar-wrapper">
       <div class="role-bar-container">
-        <!-- Role Segmented Switch -->
+        <!-- Role Segmented Switch with bold contrast -->
         <div class="role-segmented-switch">
-          <button id="btnRoleReviewer" class="role-btn active" data-role="reviewer">
+          <button id="btnRoleReviewer" class="role-btn role-reviewer-btn active" data-role="reviewer">
             <span class="role-btn-icon">📝</span>
             <div class="role-btn-text">
               <span class="role-title">وضع المُحضّر (في البيت)</span>
               <span class="role-hint">إعداد الأغراض ومتابعة المشتري حيّاً</span>
             </div>
           </button>
-          <button id="btnRoleShopper" class="role-btn" data-role="shopper">
+          <button id="btnRoleShopper" class="role-btn role-shopper-btn" data-role="shopper">
             <span class="role-btn-icon">🛒</span>
             <div class="role-btn-text">
               <span class="role-title">وضع المتسوق (في السوبرماركت)</span>
@@ -126,6 +125,46 @@
           <button id="btnFinishShopping" class="btn btn-finish-trip" title="إنهاء جولة التسوق وحفظ السجل بكل التفاصيل">
             <span>🏁 إنهاء التسوق وحفظ السجل</span>
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Open / Recent Lists Switcher Bar (قوائم اليوم المفتوحة / آخر أغراض تم تحضيرها) -->
+    <div class="lists-bar-wrapper" id="listsBarWrapper">
+      <div class="lists-bar-container">
+        <!-- In Preparer Mode: قوائم اليوم المفتوحة -->
+        <div id="preparerListsBar" class="lists-shelf-card preparer-shelf">
+          <div class="lists-shelf-header">
+            <div class="lists-shelf-title-wrap">
+              <span class="shelf-icon">📅</span>
+              <div class="shelf-titles">
+                <strong class="shelf-main-title">قوائم اليوم المفتوحة</strong>
+                <span class="shelf-sub-title">اختر القائمة لإضافة وتجهيز أغراضها، أو أضف قائمة جديدة</span>
+              </div>
+            </div>
+            <button type="button" id="btnAddNewListQuick" class="btn btn-sm btn-accent" title="إنشاء قائمة جديدة لليوم">
+              <span>+ قائمة جديدة</span>
+            </button>
+          </div>
+          <div class="lists-chips-scroll" id="preparerListsChips">
+            <!-- Dynamic list chips for today will be rendered here -->
+          </div>
+        </div>
+
+        <!-- In Shopper Mode: آخر أغراض تم تحضيرها -->
+        <div id="shopperListsBar" class="lists-shelf-card shopper-shelf" style="display: none;">
+          <div class="lists-shelf-header">
+            <div class="lists-shelf-title-wrap">
+              <span class="shelf-icon">🛒</span>
+              <div class="shelf-titles">
+                <strong class="shelf-main-title">آخر أغراض تم تحضيرها</strong>
+                <span class="shelf-sub-title">اختر السلة المطلوبة لبدء التسوق والتحقق الفوري</span>
+              </div>
+            </div>
+          </div>
+          <div class="lists-chips-scroll" id="shopperListsChips">
+            <!-- Dynamic list chips for recent lists will be rendered here -->
+          </div>
         </div>
       </div>
     </div>
@@ -157,6 +196,7 @@
             <span class="meta-pill role-meta-pill" id="activeRolePill">📝 وضع المُحضّر</span>
             <span class="meta-pill" id="listDatePill">📅 اليوم</span>
             <span class="meta-pill retention-pill" id="retentionPill">⏱️ الاحتفاظ: شهر</span>
+            <span class="meta-pill count-meta-pill" id="preparerItemsCountPill">📝 0 أغراض محضرة</span>
           </div>
           <div class="list-title-edit-wrap">
             <input type="text" id="listNameInput" class="list-name-input" value="أغراض اليوم" dir="auto" />
@@ -165,8 +205,8 @@
           <p class="list-subtitle" id="listSubtitle" dir="auto">حدّد المشتريات، التقط صور البدائل، وتابع النواقص فورياً.</p>
         </div>
 
-        <!-- Progress Circular / Stat Gauge -->
-        <div class="hero-analytics">
+        <!-- Progress Circular / Stat Gauge (Shopper Mode Only) -->
+        <div class="hero-analytics" id="heroAnalyticsSection">
           <div class="progress-ring-container">
             <svg class="progress-ring" width="90" height="90">
               <circle class="progress-ring__circle-bg" stroke="#e2e8f0" stroke-width="8" fill="transparent" r="36" cx="45" cy="45" />
@@ -204,22 +244,6 @@
               <span class="stat-lbl" data-i18n="pendingItems">باقي</span>
             </div>
           </div>
-        </div>
-      </section>
-
-      <!-- Data Analysis Banner (Live Alert) -->
-      <section id="analysisBanner" class="analysis-banner" style="display: none;">
-        <div class="banner-content">
-          <div class="banner-icon-badge" id="analysisIcon">📈</div>
-          <div class="banner-text">
-            <h4 id="analysisTitle" class="banner-title" dir="auto">تحليل سلة المقاضي</h4>
-            <p id="analysisDesc" class="banner-desc" dir="auto">جارِ التحليل...</p>
-          </div>
-        </div>
-        <div class="banner-actions">
-          <button id="btnQuickFinishFromBanner" class="btn btn-sm btn-outline-success">
-            🏁 إنهاء التسوق وحفظ السجل
-          </button>
         </div>
       </section>
 
@@ -774,7 +798,78 @@
               </div>
             </div>
           </div>
+    <!-- Modal: Edit Item (تعديل بيانات الغرض: الاسم، الصورة، الكمية، الوحدة، الملاحظات) -->
+    <div id="modalEditItem" class="modal-backdrop" style="display: none;">
+      <div class="modal-window modal-edit-item-window">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <span class="modal-badge-icon">✏️</span>
+            <div>
+              <h3 class="modal-title">تعديل بيانات الغرض</h3>
+              <p class="modal-subtitle">تعديل الاسم والكمية والصورة والملاحظات</p>
+            </div>
+          </div>
+          <button class="btn-close-modal" id="btnCloseEditItemModal">&times;</button>
         </div>
+        <form id="formEditItemModal" class="modal-body edit-item-form-body">
+          <input type="hidden" id="editItemId" />
+
+          <div class="form-input-stacked">
+            <label for="editItemName">اسم الغرض:</label>
+            <input type="text" id="editItemName" class="form-input" required dir="auto" placeholder="اسم الغرض..." />
+          </div>
+
+          <div class="edit-qty-unit-grid">
+            <div class="form-input-stacked">
+              <label for="editItemQty">الكمية المطلوبة (العدد):</label>
+              <div class="edit-stepper-control">
+                <button type="button" class="stepper-btn" id="btnEditQtyMinus">−</button>
+                <input type="number" id="editItemQty" class="form-input edit-qty-input" min="1" value="1" required dir="auto" />
+                <button type="button" class="stepper-btn" id="btnEditQtyPlus">+</button>
+              </div>
+            </div>
+
+            <div class="form-input-stacked">
+              <label for="editItemUnit">الوحدة:</label>
+              <input type="text" id="editItemUnit" class="form-input" placeholder="علبة / كيس / كجم..." dir="auto" />
+            </div>
+          </div>
+
+          <div class="form-input-stacked">
+            <label for="editItemNote">الملاحظات:</label>
+            <input type="text" id="editItemNote" class="form-input" placeholder="ملاحظة أو ماركة مفضلة..." dir="auto" />
+          </div>
+
+          <!-- Item Image preview & options -->
+          <div class="form-input-stacked">
+            <label>صورة الغرض:</label>
+            <div class="edit-photo-panel">
+              <div class="edit-photo-preview-wrap">
+                <img id="editItemPreviewImg" src="" alt="معاينة الغرض" class="edit-photo-thumb" style="display:none;" />
+                <div id="editItemNoPhoto" class="edit-no-photo-box">لا توجد صورة مرفقة</div>
+              </div>
+              <div class="edit-photo-actions">
+                <label class="btn btn-secondary btn-sm" for="fileEditItemInput" title="اختيار صورة من الجهاز">
+                  📁 اختيار صورة
+                  <input type="file" id="fileEditItemInput" accept="image/*" style="display:none" />
+                </label>
+                <button type="button" id="btnLaunchCameraEdit" class="btn btn-secondary btn-sm" title="فتح الكاميرا لالتقاط صورة">
+                  📸 لقطة كاميرا
+                </button>
+                <button type="button" id="btnRemoveEditPhoto" class="btn btn-ghost btn-sm text-danger" title="حذف الصورة">
+                  🗑️ إزالة الصورة
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer-actions">
+            <button type="button" class="btn btn-secondary" id="btnCancelEditItem">إلغاء</button>
+            <button type="submit" class="btn btn-accent btn-lg">
+              <span>💾 حفظ التعديلات</span>
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
