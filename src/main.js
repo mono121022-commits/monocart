@@ -487,32 +487,31 @@ function setHome(homeNumber, isUserSwitch = true) {
 
 async function loadHomeData(homeNumber, isUserSwitch) {
   const storageKey = `monocart_data_home_${homeNumber}`;
+  const listsKey = `monocart_lists_home_${homeNumber}`;
   const historyKey = `monocart_history_home_${homeNumber}`;
 
   let loadedFromSupabase = false;
   if (supabase && appState.tablesExistInSupabase) {
     try {
+      // 1. Fetch ALL shopping lists for this home
       const { data: lists, error: listErr } = await supabase
         .from('shopping_lists')
         .select('*')
         .eq('home_no', homeNumber)
-        .order('created_at', { ascending: false })
-        .limit(1);
+        .order('created_at', { ascending: false });
 
       if (!listErr && lists && lists.length > 0) {
-        const activeList = lists[0];
-        const { data: items } = await supabase
+        // 2. Fetch all items for this home across all lists
+        const { data: allItems } = await supabase
           .from('list_items')
           .select('*')
-          .eq('list_id', activeList.id)
+          .eq('home_no', homeNumber)
           .order('created_at', { ascending: false });
 
-        appState.currentList = {
-          id: activeList.id,
-          name: activeList.name,
-          homeNo: homeNumber,
-          createdAt: activeList.created_at,
-          items: (items || []).map(it => ({
+        const itemsByList = {};
+        (allItems || []).forEach(it => {
+          if (!itemsByList[it.list_id]) itemsByList[it.list_id] = [];
+          itemsByList[it.list_id].push({
             id: it.id,
             name: it.name,
             quantityRequired: it.quantity_required || 1,
@@ -522,9 +521,20 @@ async function loadHomeData(homeNumber, isUserSwitch) {
             note: it.note || '',
             imageUrl: it.image_url || '',
             alternativeImageUrl: it.alternative_image_url || '',
+            images: (it.image_url ? [it.image_url] : []),
             createdAt: it.created_at
-          }))
-        };
+          });
+        });
+
+        appState.homeLists = lists.map(l => ({
+          id: l.id,
+          name: l.name,
+          homeNo: homeNumber,
+          createdAt: l.created_at || new Date().toISOString(),
+          items: itemsByList[l.id] || []
+        }));
+
+        appState.currentList = appState.homeLists[0];
         loadedFromSupabase = true;
       }
     } catch (e) {
@@ -554,26 +564,39 @@ async function loadHomeData(homeNumber, isUserSwitch) {
       appState.historyLists = [];
       saveHistory();
     }
-  }
 
-  // Load or initialize homeLists for this home
-  const listsKey = `monocart_lists_home_${homeNumber}`;
-  const savedHomeLists = localStorage.getItem(listsKey);
-  if (savedHomeLists) {
-    try {
-      appState.homeLists = JSON.parse(savedHomeLists);
-    } catch (e) {
+    const savedHomeLists = localStorage.getItem(listsKey);
+    if (savedHomeLists) {
+      try {
+        appState.homeLists = JSON.parse(savedHomeLists);
+      } catch (e) {
+        appState.homeLists = [];
+      }
+    } else {
       appState.homeLists = [];
     }
   } else {
-    appState.homeLists = [];
+    // Merge any locally drafted lists that might not have reached Supabase yet
+    const savedHomeLists = localStorage.getItem(listsKey);
+    if (savedHomeLists) {
+      try {
+        const localLists = JSON.parse(savedHomeLists);
+        localLists.forEach(loc => {
+          if (!appState.homeLists.some(rem => rem.id === loc.id)) {
+            appState.homeLists.push(loc);
+          }
+        });
+      } catch (e) {}
+    }
   }
 
-  if (!appState.homeLists.some(l => l.id === appState.currentList.id)) {
+  if (!appState.homeLists || appState.homeLists.length === 0) {
+    appState.homeLists = [appState.currentList];
+  } else if (!appState.homeLists.some(l => l.id === appState.currentList.id)) {
     appState.homeLists.unshift(appState.currentList);
   }
-  saveData();
 
+  saveData();
   applyRetentionPolicy();
   renderApp();
 
@@ -789,7 +812,7 @@ function subscribeToHomeRealtime(homeNumber) {
         payload => {
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
             const item = payload.new;
-            const idx = appState.currentList.items.findIndex(x => x.id === item.id);
+            const targetListId = item.list_id || (appState.currentList ? appState.currentList.id : null);
             const formatted = {
               id: item.id,
               name: item.name,
@@ -803,15 +826,92 @@ function subscribeToHomeRealtime(homeNumber) {
               createdAt: item.created_at || new Date().toISOString()
             };
 
-            if (idx !== -1) {
-              appState.currentList.items[idx] = formatted;
-            } else {
-              appState.currentList.items.unshift(formatted);
+            // Update in current active list if matching
+            if (appState.currentList && appState.currentList.id === targetListId) {
+              const idx = appState.currentList.items.findIndex(x => x.id === item.id);
+              if (idx !== -1) {
+                appState.currentList.items[idx] = { ...appState.currentList.items[idx], ...formatted };
+              } else {
+                appState.currentList.items.unshift(formatted);
+              }
+            }
+
+            // Also update in homeLists shelf
+            if (appState.homeLists) {
+              const hList = appState.homeLists.find(l => l.id === targetListId);
+              if (hList && hList.items) {
+                const hIdx = hList.items.findIndex(x => x.id === item.id);
+                if (hIdx !== -1) {
+                  hList.items[hIdx] = { ...hList.items[hIdx], ...formatted };
+                } else {
+                  hList.items.unshift(formatted);
+                }
+              }
+            }
+
+            saveData();
+            renderApp();
+          } else if (payload.eventType === 'DELETE') {
+            if (appState.currentList) {
+              appState.currentList.items = appState.currentList.items.filter(x => x.id !== payload.old.id);
+            }
+            if (appState.homeLists) {
+              appState.homeLists.forEach(l => {
+                if (l.items) l.items = l.items.filter(x => x.id !== payload.old.id);
+              });
+            }
+            saveData();
+            renderApp();
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'shopping_lists',
+          filter: `home_no=eq.${homeNumber}`
+        },
+        payload => {
+          if (payload.eventType === 'INSERT') {
+            const listData = payload.new;
+            if (!appState.homeLists) appState.homeLists = [];
+            const exists = appState.homeLists.some(l => l.id === listData.id);
+            if (!exists) {
+              appState.homeLists.push({
+                id: listData.id,
+                name: listData.name,
+                homeNo: listData.home_no,
+                createdAt: listData.created_at || new Date().toISOString(),
+                items: []
+              });
+              saveData();
+              renderApp();
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            const listData = payload.new;
+            if (appState.homeLists) {
+              const target = appState.homeLists.find(l => l.id === listData.id);
+              if (target) {
+                target.name = listData.name;
+              }
+            }
+            if (appState.currentList && appState.currentList.id === listData.id) {
+              appState.currentList.name = listData.name;
             }
             saveData();
             renderApp();
           } else if (payload.eventType === 'DELETE') {
-            appState.currentList.items = appState.currentList.items.filter(x => x.id !== payload.old.id);
+            const deletedId = payload.old.id;
+            if (appState.homeLists) {
+              appState.homeLists = appState.homeLists.filter(l => l.id !== deletedId);
+            }
+            if (appState.currentList && appState.currentList.id === deletedId) {
+              if (appState.homeLists && appState.homeLists.length > 0) {
+                appState.currentList = appState.homeLists[0];
+              }
+            }
             saveData();
             renderApp();
           }
@@ -1747,7 +1847,7 @@ function readFileAsDataUrl(file, callback) {
 // ============================================================================
 // Lists Management, Open Lists Shelf & Full Item Editing
 // ============================================================================
-function createNewShoppingList(listName) {
+async function createNewShoppingList(listName) {
   const newList = {
     id: generateId(),
     name: listName,
@@ -1763,6 +1863,21 @@ function createNewShoppingList(listName) {
 
   saveData();
   renderApp();
+
+  if (supabase && appState.tablesExistInSupabase) {
+    try {
+      await supabase.from('shopping_lists').upsert({
+        id: newList.id,
+        home_no: appState.homeNo,
+        name: newList.name,
+        retention_days: appState.settings.retentionDays,
+        created_at: newList.createdAt
+      });
+    } catch (err) {
+      console.warn('New list sync error', err);
+    }
+  }
+
   showToast(`✨ تم بدء سلة مقاضي جديدة: "${listName}"`);
 }
 
@@ -1778,8 +1893,9 @@ function switchToList(listId) {
   }
 }
 
-function deleteShoppingList(listId) {
+async function deleteShoppingList(listId) {
   if (!appState.homeLists) return;
+  const listToDelete = appState.homeLists.find(l => l.id === listId);
   appState.homeLists = appState.homeLists.filter(l => l.id !== listId);
   if (appState.currentList.id === listId) {
     appState.currentList = appState.homeLists[0] || {
@@ -1792,7 +1908,17 @@ function deleteShoppingList(listId) {
   }
   saveData();
   renderApp();
-  showToast('🗑️ تم حذف القائمة بنجاح!');
+
+  if (supabase && appState.tablesExistInSupabase) {
+    try {
+      await supabase.from('shopping_lists').delete().eq('id', listId);
+      await supabase.from('list_items').delete().eq('list_id', listId);
+    } catch (err) {
+      console.warn('Supabase delete error', err);
+    }
+  }
+
+  showToast(`🗑️ تم حذف قائمة "${listToDelete ? listToDelete.name : ''}" بنجاح!`);
 }
 
 function isSameDay(d1, d2) {
@@ -1836,20 +1962,16 @@ function renderListsShelf() {
 
     if (preparerChips) {
       preparerChips.innerHTML = '';
-      const now = new Date();
-      let todayLists = appState.homeLists.filter(l => isSameDay(l.createdAt, now));
-      if (todayLists.length === 0) {
-        todayLists = [appState.currentList];
-      }
+      const openLists = appState.homeLists.length > 0 ? appState.homeLists : [appState.currentList];
 
-      todayLists.forEach(list => {
+      openLists.forEach(list => {
         const isActive = list.id === appState.currentList.id && !appState.viewingHistoryTrip;
         const chip = document.createElement('div');
         chip.className = `list-chip-item ${isActive ? 'active' : ''}`;
         chip.innerHTML = `
           <span class="list-chip-name" dir="auto">${isActive ? '✓ ' : ''}${escapeHtml(list.name)}</span>
           <span class="list-chip-count">${(list.items || []).length} صنف</span>
-          ${todayLists.length > 1 ? `<button type="button" class="chip-delete-btn" title="حذف القائمة">&times;</button>` : ''}
+          ${openLists.length > 1 ? `<button type="button" class="chip-delete-btn" title="حذف القائمة">&times;</button>` : ''}
         `;
         chip.addEventListener('click', (e) => {
           if (e.target.closest('.chip-delete-btn')) {
@@ -2309,12 +2431,9 @@ function renderCards() {
     card.className = `item-card status-${item.status} ${isSelectedInHistory ? 'is-selected-for-copy' : ''}`;
     card.dataset.id = item.id;
 
-    const itemNumber = itemIdx + 1;
-    const cornerBadgeHtml = `
-      <div class="card-corner-index" title="${lang === 'ar' ? 'صنف رقم' : 'Item #'} ${itemNumber}">
-        <span class="index-hash">#</span>${itemNumber}
-      </div>
-    `;
+    // Stable card numbering tied to its persistent position in the list
+    const stableIndex = activeDisplayList.items.findIndex(i => i.id === item.id);
+    const stableNumber = stableIndex !== -1 ? (stableIndex + 1) : (itemIdx + 1);
 
     let statusLabel = lang === 'ar' ? '⏳ قيد الشراء' : '⏳ Pending';
     let statusClass = 'badge-pending';
@@ -2333,8 +2452,11 @@ function renderCards() {
       statusClass = 'badge-missing';
     }
 
-    // Media Display (Photo or Alternative/Substitute Photo)
-    const displayImg = (item.status === 'substitute' && item.alternativeImageUrl) ? item.alternativeImageUrl : item.imageUrl;
+    // Media Display (Alternative photo if substitute, or primary photo, or first from images array)
+    const displayImg = (item.status === 'substitute' && item.alternativeImageUrl)
+      ? item.alternativeImageUrl
+      : (item.imageUrl || (item.images && item.images.length > 0 ? item.images[0] : null));
+
     let imageHtml = '';
     if (displayImg) {
       imageHtml = `
@@ -2355,7 +2477,26 @@ function renderCards() {
       `;
     }
 
-    const fileInputHtml = isHistoryMode ? '' : `<input type="file" id="cardFileInput_${item.id}" accept="image/*" style="display:none;" />`;
+    // Multi-Image Gallery Strip if more than 1 image or images array present
+    let imagesStripHtml = '';
+    const allImages = Array.isArray(item.images) && item.images.length > 0
+      ? item.images
+      : (item.imageUrl ? [item.imageUrl] : []);
+
+    if (allImages.length > 0) {
+      imagesStripHtml = `
+        <div class="card-images-strip" title="معرض صور الغرض">
+          ${allImages.map((imgSrc, imgIdx) => `
+            <div class="card-thumb-item">
+              <img src="${imgSrc}" class="card-thumb-img" alt="صورة ${imgIdx + 1}" data-zoom-src="${imgSrc}" />
+              ${!isHistoryMode ? `<button type="button" class="card-thumb-del" data-item-id="${item.id}" data-idx="${imgIdx}" title="حذف هذه الصورة">&times;</button>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    const fileInputHtml = isHistoryMode ? '' : `<input type="file" id="cardFileInput_${item.id}" accept="image/*" multiple style="display:none;" />`;
     let noteHtml = item.note ? `<p class="card-note-text" dir="auto">📝 ${escapeHtml(item.note)}</p>` : '';
 
     // History selection checkbox at top corner of card
@@ -2369,25 +2510,34 @@ function renderCards() {
       `;
     }
 
-    // Partial purchase stepper box
+    // Partial purchase interactive box with fraction buttons and direct numeric input
     let partialBoxHtml = '';
     if (item.status === 'partial') {
-      const req = item.quantityRequired || 2;
-      const found = item.quantityFound || 1;
+      const req = parseFloat(item.quantityRequired) || 2;
+      const found = parseFloat(item.quantityFound) || (req > 1 ? Math.floor(req / 2) : 0.5);
       const missingCount = Math.max(0, req - found);
 
       partialBoxHtml = `
         <div class="partial-stepper-box">
           <div class="partial-stepper-row">
-            <span class="stepper-label">الكمية التي وجدتها:</span>
-            <div style="display:flex;align-items:center;gap:0.5rem;">
-              ${!isHistoryMode ? `<button class="stepper-btn btn-stepper-minus" data-id="${item.id}">-</button>` : ''}
-              <strong style="font-size:16px;color:#92400e;">${found} من ${req} ${item.unit || 'علبة'}</strong>
-              ${!isHistoryMode ? `<button class="stepper-btn btn-stepper-plus" data-id="${item.id}">+</button>` : ''}
+            <span class="stepper-label">الكمية التي تم شراؤها:</span>
+            <div style="display:flex;align-items:center;gap:0.4rem;">
+              ${!isHistoryMode ? `<button type="button" class="stepper-btn btn-stepper-minus" data-id="${item.id}">-</button>` : ''}
+              <input type="number" step="0.5" min="0" max="${req}" class="partial-num-input" value="${found}" ${isHistoryMode ? 'disabled' : ''} />
+              <span class="partial-unit-text">من ${req} ${escapeHtml(item.unit || 'حبة')}</span>
+              ${!isHistoryMode ? `<button type="button" class="stepper-btn btn-stepper-plus" data-id="${item.id}">+</button>` : ''}
             </div>
           </div>
+          ${!isHistoryMode ? `
+            <div class="partial-fractions-row">
+              <span class="fraction-label">خيارات سريعة:</span>
+              <button type="button" class="partial-fraction-btn" data-val="${(req * 0.5).toFixed(1).replace('.0', '')}">½ (نصف المطلوب)</button>
+              <button type="button" class="partial-fraction-btn" data-val="1">1 ${escapeHtml(item.unit || 'حبة')}</button>
+              ${req > 2 ? `<button type="button" class="partial-fraction-btn" data-val="${req - 1}">باقي 1 فقط</button>` : ''}
+            </div>
+          ` : ''}
           <div class="partial-missing-alert-tag">
-            ⚠️ ناقص ${missingCount} ${item.unit || 'علبة'} لسه
+            ⚠️ باقي للشراء: <strong class="partial-remaining-val">${missingCount}</strong> ${escapeHtml(item.unit || 'حبة')}
           </div>
         </div>
       `;
@@ -2440,13 +2590,16 @@ function renderCards() {
     const qtyDisplay = `${item.quantityRequired || 1} ${item.unit || ''}`.trim();
 
     card.innerHTML = `
-      ${cornerBadgeHtml}
       ${historySelectHtml}
       ${imageHtml}
+      ${imagesStripHtml}
       ${fileInputHtml}
       <div class="card-body">
         <div class="card-title-row">
-          <h3 class="card-title" dir="auto">${escapeHtml(item.name)}</h3>
+          <div class="card-title-with-num">
+            <span class="card-num-badge" title="${lang === 'ar' ? 'صنف رقم' : 'Item #'} ${stableNumber}">#${stableNumber}</span>
+            <h3 class="card-title" dir="auto">${escapeHtml(item.name)}</h3>
+          </div>
           ${qtyDisplay ? `<span class="card-qty-badge" dir="auto">${escapeHtml(qtyDisplay)}</span>` : ''}
         </div>
         ${noteHtml}
@@ -2537,6 +2690,7 @@ function attachCardListeners(card, item, isHistoryMode) {
       openEditItemModal(item.id);
     });
   }
+
   // Image Zoom on click
   const cardImg = card.querySelector('.card-img');
   if (cardImg) {
@@ -2547,6 +2701,36 @@ function attachCardListeners(card, item, isHistoryMode) {
       openImageZoom(src, title);
     });
   }
+
+  // Thumbnails Zoom and Delete
+  const thumbImgs = card.querySelectorAll('.card-thumb-img');
+  thumbImgs.forEach(tImg => {
+    tImg.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openImageZoom(tImg.src, item.name);
+    });
+  });
+
+  const thumbDels = card.querySelectorAll('.card-thumb-del');
+  thumbDels.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.idx, 10);
+      if (item.images && item.images.length > idx) {
+        item.images.splice(idx, 1);
+        if (item.images.length === 0) {
+          item.imageUrl = null;
+          item.alternativeImageUrl = null;
+        } else {
+          item.imageUrl = item.images[0];
+        }
+        saveData();
+        renderApp();
+        syncSingleItemToSupabase(item);
+        showToast('🗑️ تم حذف الصورة من الغرض');
+      }
+    });
+  });
 
   // Also enable zoom on substitute preview chip if present
   const subChipImg = card.querySelector('.sub-preview-chip img');
@@ -2602,8 +2786,8 @@ function attachCardListeners(card, item, isHistoryMode) {
         item.status = 'pending';
       } else {
         item.status = 'partial';
-        const req = item.quantityRequired || 2;
-        item.quantityFound = Math.max(1, Math.floor(req / 2));
+        const req = parseFloat(item.quantityRequired) || 2;
+        item.quantityFound = req > 1 ? Math.floor(req / 2) : 0.5;
       }
       saveData();
       renderApp();
@@ -2645,7 +2829,7 @@ function attachCardListeners(card, item, isHistoryMode) {
     });
   }
 
-  // Substitute Stepper & Confirm
+  // Substitute Stepper & Confirm (WITHOUT SCREEN FLICKERING)
   const subMinus = card.querySelector('.btn-sub-minus');
   const subPlus = card.querySelector('.btn-sub-plus');
   const subConfirm = card.querySelector('.btn-confirm-substitute');
@@ -2653,17 +2837,27 @@ function attachCardListeners(card, item, isHistoryMode) {
   const subRemoveImg = card.querySelector('.btn-remove-sub-img');
 
   if (subMinus) {
-    subMinus.addEventListener('click', () => {
-      if ((item.substituteQty || 1) > 1) {
-        item.substituteQty = (item.substituteQty || 1) - 1;
-        renderApp();
+    subMinus.addEventListener('click', (e) => {
+      e.stopPropagation();
+      let cur = parseFloat(item.substituteQty) || 1;
+      if (cur > 1) {
+        cur -= 1;
+        item.substituteQty = cur;
+        const valElem = card.querySelector('.sub-qty-val');
+        if (valElem) valElem.textContent = `${cur} ${escapeHtml(item.unit || 'حبة')}`;
+        saveData();
       }
     });
   }
   if (subPlus) {
-    subPlus.addEventListener('click', () => {
-      item.substituteQty = (item.substituteQty || 1) + 1;
-      renderApp();
+    subPlus.addEventListener('click', (e) => {
+      e.stopPropagation();
+      let cur = parseFloat(item.substituteQty) || 1;
+      cur += 1;
+      item.substituteQty = cur;
+      const valElem = card.querySelector('.sub-qty-val');
+      if (valElem) valElem.textContent = `${cur} ${escapeHtml(item.unit || 'حبة')}`;
+      saveData();
     });
   }
   if (subNameInput) {
@@ -2691,35 +2885,67 @@ function attachCardListeners(card, item, isHistoryMode) {
     });
   }
 
-  // Steppers for partial
+  // Steppers & Fractions for partial (WITHOUT SCREEN FLICKERING)
   const btnMinus = card.querySelector('.btn-stepper-minus');
   const btnPlus = card.querySelector('.btn-stepper-plus');
+  const partialNumInput = card.querySelector('.partial-num-input');
+  const remainingValElem = card.querySelector('.partial-remaining-val');
+  const statusBadge = card.querySelector('.card-status-badge');
+
+  function updatePartialUI(newVal) {
+    const req = parseFloat(item.quantityRequired) || 1;
+    newVal = Math.max(0, Math.min(req, newVal));
+    item.quantityFound = newVal;
+    if (partialNumInput) partialNumInput.value = newVal;
+    const missing = Math.max(0, req - newVal);
+    if (remainingValElem) remainingValElem.textContent = missing;
+    if (statusBadge) {
+      statusBadge.textContent = appState.lang === 'ar' ? `⚠️ تم شراء ${newVal} من ${req}` : `⚠️ ${newVal} of ${req}`;
+    }
+    saveData();
+    syncSingleItemToSupabase(item);
+  }
+
   if (btnMinus) {
-    btnMinus.addEventListener('click', () => {
-      if ((item.quantityFound || 1) > 1) {
-        item.quantityFound--;
-        saveData();
-        renderApp();
-        syncSingleItemToSupabase(item);
+    btnMinus.addEventListener('click', (e) => {
+      e.stopPropagation();
+      let cur = parseFloat(item.quantityFound) || 0;
+      if (cur > 0.5) {
+        updatePartialUI(cur - 0.5);
+      } else if (cur > 0) {
+        updatePartialUI(0);
       }
     });
   }
   if (btnPlus) {
-    btnPlus.addEventListener('click', () => {
-      const req = item.quantityRequired || 2;
-      if ((item.quantityFound || 1) < req) {
-        item.quantityFound++;
-        saveData();
-        renderApp();
-        syncSingleItemToSupabase(item);
-      } else {
-        item.status = 'bought';
-        saveData();
-        renderApp();
-        syncSingleItemToSupabase(item);
+    btnPlus.addEventListener('click', (e) => {
+      e.stopPropagation();
+      let cur = parseFloat(item.quantityFound) || 0;
+      const req = parseFloat(item.quantityRequired) || 1;
+      if (cur < req) {
+        updatePartialUI(Math.min(req, cur + 0.5));
       }
     });
   }
+  if (partialNumInput) {
+    partialNumInput.addEventListener('change', (e) => {
+      const val = parseFloat(e.target.value);
+      if (!isNaN(val)) {
+        updatePartialUI(val);
+      }
+    });
+  }
+
+  const fractionBtns = card.querySelectorAll('.partial-fraction-btn');
+  fractionBtns.forEach(fBtn => {
+    fBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const val = parseFloat(fBtn.dataset.val);
+      if (!isNaN(val)) {
+        updatePartialUI(val);
+      }
+    });
+  });
 
   // Card Camera button (for substitute or missing)
   const btnCamera = card.querySelector('.btn-card-camera');
@@ -2729,17 +2955,26 @@ function attachCardListeners(card, item, isHistoryMode) {
     });
   }
 
-  // File Upload on Card
+  // File Upload on Card (Supports multiple images)
   const fileInput = card.querySelector(`#cardFileInput_${item.id}`);
   if (fileInput) {
     fileInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        readFileAsDataUrl(file, (dataUrl) => {
-          item.imageUrl = dataUrl;
-          saveData();
-          renderApp();
-          syncSingleItemToSupabase(item);
+      const files = Array.from(e.target.files || []);
+      if (files.length > 0) {
+        if (!item.images) item.images = [];
+        let remaining = files.length;
+        files.forEach(file => {
+          readFileAsDataUrl(file, (dataUrl) => {
+            item.images.push(dataUrl);
+            if (!item.imageUrl) item.imageUrl = dataUrl;
+            remaining--;
+            if (remaining === 0) {
+              saveData();
+              renderApp();
+              syncSingleItemToSupabase(item);
+              showToast(`📸 تم إضافة ${files.length} صورة بنجاح!`);
+            }
+          });
         });
       }
     });
@@ -2840,14 +3075,16 @@ function applyCapturedPhoto(dataUrl) {
   } else if (appState.cameraMode === 'item' && appState.cameraTargetItemId) {
     const item = appState.currentList.items.find(x => x.id === appState.cameraTargetItemId);
     if (item) {
+      if (!item.images) item.images = [];
+      item.images.push(dataUrl);
+      item.imageUrl = dataUrl;
       if (item.status === 'missing' || item.status === 'substitute' || appState.openSubstituteItemId === item.id) {
         item.alternativeImageUrl = dataUrl;
-      } else {
-        item.imageUrl = dataUrl;
       }
       saveData();
       renderApp();
-      showToast('📸 تم حفظ الصورة للغرض فورياً!');
+      syncSingleItemToSupabase(item);
+      showToast('📸 تم التقاط وحفظ الصورة للغرض فورياً!');
     }
   }
 }
@@ -3557,29 +3794,27 @@ function showToast(message) {
   if (!toast) {
     toast = document.createElement('div');
     toast.id = 'appToast';
-    toast.style.cssText = `
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      z-index: 9999;
-      background: #0f172a;
-      color: #ffffff;
-      padding: 12px 20px;
-      border-radius: 12px;
-      font-weight: 700;
-      font-size: 14px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.25);
-      border-left: 4px solid #f97316;
-      animation: slideDown 0.3s ease;
-      font-family: inherit;
+    toast.className = 'toast-art-container';
+    toast.innerHTML = `
+      <div class="toast-art-badge">
+        <div class="toast-art-check"></div>
+      </div>
+      <span class="toast-art-text" dir="auto"></span>
     `;
     document.body.appendChild(toast);
   }
-  toast.textContent = message;
-  toast.style.display = 'block';
-  setTimeout(() => {
-    toast.style.display = 'none';
-  }, 3500);
+
+  const textEl = toast.querySelector('.toast-art-text');
+  if (textEl) textEl.textContent = message;
+
+  toast.classList.remove('toast-visible');
+  void toast.offsetWidth; // trigger reflow
+  toast.classList.add('toast-visible');
+
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => {
+    toast.classList.remove('toast-visible');
+  }, 2800);
 }
 
 function escapeHtml(str) {

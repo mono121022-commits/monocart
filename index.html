@@ -1,16 +1,20 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MonoCart | مونو كارت - منصة المقاضي الذكية</title>
-  <meta name="description" content="منصة تفاعلية عصرية لإدارة أغراض الشراء، إرفاق الصور، التحقق الفوري، وتجميع الكروت وتحليل البيانات في الوقت الفعلي." />
-  
+  <meta name="description"
+    content="منصة تفاعلية عصرية لإدارة أغراض الشراء، إرفاق الصور، التحقق الفوري، وتجميع الكروت وتحليل البيانات في الوقت الفعلي." />
+
   <!-- Google Fonts: Alexandria (Premium Arabic) & Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  
+  <link
+    href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
   <!-- Mobile App & PWA Settings -->
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#081226" />
@@ -19,9 +23,10 @@
   <meta name="apple-mobile-web-app-title" content="MonoCart" />
   <link rel="apple-touch-icon" href="/icon-maskable.png" />
   <link rel="icon" type="image/png" href="/icon-512.png" />
-  
+
   <link rel="stylesheet" href="/src/style.css" />
 </head>
+
 <body>
   <!-- Initial Seamless Splash Screen (No Black Boxes) -->
   <div id="appSplashScreen" class="app-splash-screen">
@@ -44,7 +49,8 @@
           <div class="brand-text">
             <div class="brand-title-row">
               <h1 class="brand-title" id="appTitle">مونو كارت</h1>
-              <span id="supabaseStatus" class="connection-dot-indicator status-supabase" title="مزامنة سحابية مباشرة نشطة">
+              <span id="supabaseStatus" class="connection-dot-indicator status-supabase"
+                title="مزامنة سحابية مباشرة نشطة">
                 <span class="pulse-dot"></span>
               </span>
             </div>
@@ -88,8 +94,14 @@
           </button>
 
           <!-- WhatsApp Support Button -->
-          <a href="https://wa.me/966541932559?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%A8%D8%AE%D8%B5%D9%88%D8%B5%20%D9%85%D9%86%D8%B5%D8%A9%20%D9%85%D9%88%D9%86%D9%88%20%D9%83%D8%A7%D8%B1%D8%AA" target="_blank" id="btnWhatsAppNav" class="btn btn-ghost btn-whatsapp-nav" title="دعم واتساب الفوري 966541932559+">
-            <span class="wa-nav-icon">💬</span>
+          <a href="https://wa.me/966541932559?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%A8%D8%AE%D8%B5%D9%88%D8%B5%20%D9%85%D9%86%D8%B5%D8%A9%20%D9%85%D9%88%D9%86%D9%88%20%D9%83%D8%A7%D8%B1%D8%AA"
+            target="_blank" id="btnWhatsAppNav" class="btn btn-ghost btn-whatsapp-nav"
+            title="دعم واتساب الفوري 966541932559+">
+            <span class="wa-css-art-icon" aria-hidden="true">
+              <svg viewBox="0 0 32 32" class="wa-svg-icon" width="20" height="20">
+                <path fill="#ffffff" fill-rule="evenodd" clip-rule="evenodd" d="M16 2.5C8.544 2.5 2.5 8.544 2.5 16c0 2.656.766 5.132 2.089 7.223L3 29.5l6.502-1.55A13.435 13.435 0 0016 29.5c7.456 0 13.5-6.044 13.5-13.5S23.456 2.5 16 2.5zm-1.73 19.902c-3.743-.864-6.716-3.837-7.58-7.58l1.536-1.536a1.05 1.05 0 00.192-1.056 16.5 16.5 0 01-1.728-3.264.96.96 0 00-1.152-.288l-1.824.96c-.384.192-.576.672-.576 1.056.192 4.224 2.016 8.16 4.992 11.136s6.912 4.8 11.136 4.992c.384 0 .864-.192 1.056-.576l.96-1.824a.96.96 0 00-.288-1.152 16.5 16.5 0 01-3.264-1.728 1.05 1.05 0 00-1.056.192l-1.536 1.536z" />
+              </svg>
+            </span>
             <span id="waNavLabel">دعم واتساب</span>
           </a>
         </div>
@@ -178,7 +190,8 @@
           <div class="h-banner-text">
             <span class="h-banner-tag">أنت الآن في وضع استعراض سجل محفوظ</span>
             <h3 id="historyBannerTitle" class="h-banner-title" dir="auto">أغراض سابقة</h3>
-            <p id="historyBannerSubtitle" class="h-banner-sub" dir="auto">تاريخ الجولة • حدد أي أصناف ترغب في نقلها لسلة جديدة</p>
+            <p id="historyBannerSubtitle" class="h-banner-sub" dir="auto">تاريخ الجولة • حدد أي أصناف ترغب في نقلها لسلة
+              جديدة</p>
           </div>
         </div>
         <div class="h-banner-actions">
@@ -202,15 +215,19 @@
             <input type="text" id="listNameInput" class="list-name-input" value="أغراض اليوم" dir="auto" />
             <button id="btnRenameList" class="btn-icon-tiny" title="تعديل الاسم">✏️</button>
           </div>
-          <p class="list-subtitle" id="listSubtitle" dir="auto">حدّد المشتريات، التقط صور البدائل، وتابع النواقص فورياً.</p>
+          <p class="list-subtitle" id="listSubtitle" dir="auto">حدّد المشتريات، التقط صور البدائل، وتابع النواقص فورياً.
+          </p>
         </div>
 
         <!-- Progress Circular / Stat Gauge (Shopper Mode Only) -->
         <div class="hero-analytics" id="heroAnalyticsSection">
           <div class="progress-ring-container">
             <svg class="progress-ring" width="90" height="90">
-              <circle class="progress-ring__circle-bg" stroke="#e2e8f0" stroke-width="8" fill="transparent" r="36" cx="45" cy="45" />
-              <circle id="progressCircle" class="progress-ring__circle" stroke="#f97316" stroke-width="8" stroke-dasharray="226.19" stroke-dashoffset="226.19" stroke-linecap="round" fill="transparent" r="36" cx="45" cy="45" />
+              <circle class="progress-ring__circle-bg" stroke="#e2e8f0" stroke-width="8" fill="transparent" r="36"
+                cx="45" cy="45" />
+              <circle id="progressCircle" class="progress-ring__circle" stroke="#f97316" stroke-width="8"
+                stroke-dasharray="226.19" stroke-dashoffset="226.19" stroke-linecap="round" fill="transparent" r="36"
+                cx="45" cy="45" />
             </svg>
             <div class="progress-text-center">
               <span id="progressPercent" class="progress-val">0%</span>
@@ -266,17 +283,23 @@
           <form id="formAddItem" class="add-item-form">
             <div class="form-row">
               <div class="input-group main-input-wrap">
-                <textarea id="inputItemName" class="form-input multi-item-textarea" rows="2" placeholder="اكتب غرضاً، أو اضغط Enter لكتابة أغراض متعددة سطر بسطر (مثلاً: جبنة براميلي [Enter] لبن نادك [Enter] بطاطس)..." dir="auto" required></textarea>
-                <button type="button" id="btnClearItemNameInput" class="btn-clear-input-x" title="مسح المكتوب" style="display: none;">&times;</button>
+                <textarea id="inputItemName" class="form-input multi-item-textarea" rows="2"
+                  placeholder="اكتب غرضاً، أو اضغط Enter لكتابة أغراض متعددة سطر بسطر (مثلاً: جبنة براميلي [Enter] لبن نادك [Enter] بطاطس)..."
+                  dir="auto" required></textarea>
+                <button type="button" id="btnClearItemNameInput" class="btn-clear-input-x" title="مسح المكتوب"
+                  style="display: none;">&times;</button>
               </div>
               <div class="input-group qty-wrap">
-                <input type="number" id="inputItemQtyNum" class="form-input" placeholder="العدد" min="1" value="1" dir="auto" />
+                <input type="number" id="inputItemQtyNum" class="form-input" placeholder="العدد" min="1" value="1"
+                  dir="auto" />
               </div>
               <div class="input-group unit-wrap">
-                <input type="text" id="inputItemUnit" class="form-input" placeholder="الوحدة (علبة / كيس / كجم)" dir="auto" />
+                <input type="text" id="inputItemUnit" class="form-input" placeholder="الوحدة (علبة / كيس / كجم)"
+                  dir="auto" />
               </div>
               <div class="input-group note-wrap">
-                <input type="text" id="inputItemNote" class="form-input" placeholder="ملاحظات (اختياري)..." dir="auto" />
+                <input type="text" id="inputItemNote" class="form-input" placeholder="ملاحظات (اختياري)..."
+                  dir="auto" />
               </div>
             </div>
 
@@ -286,7 +309,8 @@
                   <span>📷 إرفاق صورة</span>
                   <input type="file" id="fileSingleInput" accept="image/*" style="display:none" />
                 </label>
-                <button type="button" id="btnLaunchCameraSingle" class="btn-attach-camera" title="فتح الكاميرا المباشرة">
+                <button type="button" id="btnLaunchCameraSingle" class="btn-attach-camera"
+                  title="فتح الكاميرا المباشرة">
                   <span>📸 لقطة كاميرا فورية</span>
                 </button>
                 <div id="singlePhotoPreview" class="photo-thumbnail-chip" style="display: none;">
@@ -308,7 +332,8 @@
             <div class="dropzone-inner">
               <div class="dropzone-icon">📥</div>
               <h3 class="dropzone-title">اسحب وأفلت صور متعددة هنا، أو اضغط للاختيار</h3>
-              <p class="dropzone-subtitle">عند رفع أكثر من صورة، سيقوم النظام تلقائياً بتوزيع كل صورة على كارت مستقل مع شيك ليست وملاحظات عصرية.</p>
+              <p class="dropzone-subtitle">عند رفع أكثر من صورة، سيقوم النظام تلقائياً بتوزيع كل صورة على كارت مستقل مع
+                شيك ليست وملاحظات عصرية.</p>
               <input type="file" id="fileBatchInput" multiple accept="image/*" style="display:none" />
               <button type="button" class="btn btn-primary" onclick="document.getElementById('fileBatchInput').click()">
                 📂 اختيار صور متعددة من الجهاز
@@ -323,7 +348,8 @@
           <div class="demo-samples-card">
             <div class="demo-info">
               <h4>🎯 المقاضي والصور التجريبية المرفقة من قبلك:</h4>
-              <p>جبنة براميلي، جبنة دوبل كريم، لبن نادك، زبادي نادك، بطاطس كياس وفرة أو داري، كزبرة، بقدونس، مكسرات، مع الـ 5 صور التي رفعتها.</p>
+              <p>جبنة براميلي، جبنة دوبل كريم، لبن نادك، زبادي نادك، بطاطس كياس وفرة أو داري، كزبرة، بقدونس، مكسرات، مع
+                الـ 5 صور التي رفعتها.</p>
             </div>
             <button id="btnLoadDemoItems" class="btn btn-accent">
               ⚡ شحن القائمة بالبيانات والصور فوراً
@@ -403,7 +429,8 @@
             <span class="modal-badge-icon">✨</span>
             <div>
               <h3 class="modal-title">إنشاء سلة مقاضي جديدة</h3>
-              <p class="modal-subtitle">حدد اسماً مميزاً لسلة المقاضي (مثل: مقاضي الأسبوع، خضار وفاكهة، عزومة الجمعة...)</p>
+              <p class="modal-subtitle">حدد اسماً مميزاً لسلة المقاضي (مثل: مقاضي الأسبوع، خضار وفاكهة، عزومة الجمعة...)
+              </p>
             </div>
           </div>
           <button class="btn-close-modal" id="btnCloseNewListModal">&times;</button>
@@ -411,7 +438,8 @@
         <form id="formNewListModal" class="modal-body">
           <div class="form-input-stacked">
             <label for="inputNewListName">اسم السلة الجديدة:</label>
-            <input type="text" id="inputNewListName" class="form-input" placeholder="مثلاً: مقاضي كارفور أو عزومة السبت..." required dir="auto" />
+            <input type="text" id="inputNewListName" class="form-input"
+              placeholder="مثلاً: مقاضي كارفور أو عزومة السبت..." required dir="auto" />
           </div>
           <div class="quick-list-names">
             <span>اقتراحات سريعة:</span>
@@ -439,7 +467,8 @@
             <span class="modal-badge-icon">🏁</span>
             <div>
               <h3 class="modal-title">إنهاء جولة التسوق وحفظ السجل</h3>
-              <p class="modal-subtitle">سيتم أرشفة هذه الجولة بكل تفاصيلها (المشتريات، النواقص، البدائل المصورة، والكميات) في السجل.</p>
+              <p class="modal-subtitle">سيتم أرشفة هذه الجولة بكل تفاصيلها (المشتريات، النواقص، البدائل المصورة،
+                والكميات) في السجل.</p>
             </div>
           </div>
           <button class="btn-close-modal" id="btnCloseFinishTripModal">&times;</button>
@@ -460,7 +489,8 @@
               <input type="radio" name="finishAction" value="save_and_rollover" />
               <div class="opt-text">
                 <strong>🔄 حفظ السجل وترحيل النواقص لقائمة جديدة فوراً</strong>
-                <span>يتم أرشفة الجولة الحالية، ونقل كل الأغراض غير المتوفرة أو الناقصة جزئياً إلى قائمة جديدة لجولة التسوق القادمة!</span>
+                <span>يتم أرشفة الجولة الحالية، ونقل كل الأغراض غير المتوفرة أو الناقصة جزئياً إلى قائمة جديدة لجولة
+                  التسوق القادمة!</span>
               </div>
             </label>
           </div>
@@ -507,7 +537,7 @@
       <div class="modal-window home-login-window">
         <!-- Close Button (X) -->
         <button class="btn-close-modal btn-close-home-login" id="btnCloseHomeLoginModal" title="إغلاق">&times;</button>
-        
+
         <div class="home-login-header">
           <div class="home-logo-glow">
             <img src="/logo.png" class="home-logo-img" alt="MonoCart Logo" />
@@ -533,7 +563,8 @@
               <label for="inputHomeNo" class="home-input-label" id="lblHomeLogin">رمز المنزل أو كود العميل:</label>
               <div class="input-with-icon">
                 <span class="input-icon">🔑</span>
-                <input type="text" id="inputHomeNo" class="form-input home-number-input" placeholder="مثال: منزل 101 أو كودك الخاص..." required dir="auto" autofocus />
+                <input type="text" id="inputHomeNo" class="form-input home-number-input"
+                  placeholder="مثال: منزل 101 أو كودك الخاص..." required dir="auto" autofocus />
               </div>
             </div>
 
@@ -551,12 +582,15 @@
         <div id="panelAuthRegister" class="auth-panel-content" style="display: none;">
           <form id="formHomeRegister" class="home-login-form">
             <div class="home-input-wrap">
-              <label for="inputNewHomeNo" class="home-input-label" id="lblHomeRegister">رمز المنزل الجديد (بصمة العميل):</label>
+              <label for="inputNewHomeNo" class="home-input-label" id="lblHomeRegister">رمز المنزل الجديد (بصمة
+                العميل):</label>
               <div class="input-with-icon">
                 <span class="input-icon">✨</span>
-                <input type="text" id="inputNewHomeNo" class="form-input home-number-input" placeholder="مثال: فيلا 5 أو عائلة أحمد..." required dir="auto" />
+                <input type="text" id="inputNewHomeNo" class="form-input home-number-input"
+                  placeholder="مثال: فيلا 5 أو عائلة أحمد..." required dir="auto" />
               </div>
-              <p class="home-input-hint" id="lblHomeRegisterHint">سنقوم بالتحقق في سوبابيز والتأكد من أن الرمز غير مكرر، وبدء سلة جديدة فارغة تماماً.</p>
+              <p class="home-input-hint" id="lblHomeRegisterHint">سنقوم بالتحقق في سوبابيز والتأكد من أن الرمز غير مكرر،
+                وبدء سلة جديدة فارغة تماماً.</p>
             </div>
 
             <div id="homeRegisterAlert" class="auth-alert-box" style="display: none;"></div>
@@ -571,8 +605,13 @@
 
         <!-- WhatsApp Support Direct Link (No visible raw phone number) -->
         <div class="modal-wa-footer">
-          <a href="https://wa.me/966541932559?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%A8%D8%AE%D8%B5%D9%88%D8%B5%20%D9%85%D9%86%D8%B5%D8%A9%20%D9%85%D9%88%D9%86%D9%88%20%D9%83%D8%A7%D8%B1%D8%AA" target="_blank" class="home-wa-support-link" title="تواصل عبر واتساب للدعم">
-            <span class="wa-icon-bubble">💬</span>
+          <a href="https://wa.me/966541932559?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%A8%D8%AE%D8%B5%D9%88%D8%B5%20%D9%85%D9%86%D8%B5%D8%A9%20%D9%85%D9%88%D9%86%D9%88%20%D9%83%D8%A7%D8%B1%D8%AA"
+            target="_blank" class="home-wa-support-link" title="تواصل عبر واتساب للدعم">
+            <span class="wa-css-art-icon" aria-hidden="true">
+              <svg viewBox="0 0 32 32" class="wa-svg-icon" width="22" height="22">
+                <path fill="#ffffff" fill-rule="evenodd" clip-rule="evenodd" d="M16 2.5C8.544 2.5 2.5 8.544 2.5 16c0 2.656.766 5.132 2.089 7.223L3 29.5l6.502-1.55A13.435 13.435 0 0016 29.5c7.456 0 13.5-6.044 13.5-13.5S23.456 2.5 16 2.5zm-1.73 19.902c-3.743-.864-6.716-3.837-7.58-7.58l1.536-1.536a1.05 1.05 0 00.192-1.056 16.5 16.5 0 01-1.728-3.264.96.96 0 00-1.152-.288l-1.824.96c-.384.192-.576.672-.576 1.056.192 4.224 2.016 8.16 4.992 11.136s6.912 4.8 11.136 4.992c.384 0 .864-.192 1.056-.576l.96-1.824a.96.96 0 00-.288-1.152 16.5 16.5 0 01-3.264-1.728 1.05 1.05 0 00-1.056.192l-1.536 1.536z" />
+              </svg>
+            </span>
             <div class="wa-text-wrap">
               <span class="wa-title" id="lblWaSupport">تواصل مباشرة مع الدعم الفني عبر واتساب</span>
               <span class="wa-status-text">اضغط هنا للمحادثة الفورية على WhatsApp</span>
@@ -590,7 +629,8 @@
             <span class="modal-badge-icon">🖼️</span>
             <div>
               <h3 class="modal-title">تجميع وتصدير المقاضي المشتراة والصور</h3>
-              <p class="modal-subtitle">اختر تصدير صورة مجمعة (كولاج 5 صور بالصف) أو ملف PDF احترافي مع الملاحظات والبيانات.</p>
+              <p class="modal-subtitle">اختر تصدير صورة مجمعة (كولاج 5 صور بالصف) أو ملف PDF احترافي مع الملاحظات
+                والبيانات.</p>
             </div>
           </div>
           <button class="btn-close-modal" id="btnCloseCompileModal">&times;</button>
@@ -695,7 +735,8 @@
             <button type="button" class="btn-zoom-action" id="btnZoomOut" title="تصغير (-)">🔍−</button>
             <span class="zoom-scale-indicator" id="zoomScaleLabel">100%</span>
             <button type="button" class="btn-zoom-action" id="btnZoomIn" title="تكبير (+)">🔍+</button>
-            <button type="button" class="btn-zoom-action btn-zoom-reset" id="btnZoomReset" title="إعادة الضبط">🔄 ضبط</button>
+            <button type="button" class="btn-zoom-action btn-zoom-reset" id="btnZoomReset" title="إعادة الضبط">🔄
+              ضبط</button>
           </div>
         </div>
 
@@ -705,7 +746,7 @@
             <img id="zoomModalImg" src="" alt="معاينة الصورة بكامل الدقة" />
           </div>
         </div>
-        
+
         <!-- Zoom Hint -->
         <div class="zoom-footer-hint">
           <span>💡 يمكنك أيضاً التكبير والتصغير بعجلة الفأرة أو اللمس والسحب</span>
@@ -800,104 +841,116 @@
 
           <!-- Status Card -->
           <div class="settings-group" style="border-bottom: none;">
-            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 1rem; display: flex; align-items: center; gap: 0.75rem;">
+            <div
+              style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 1rem; display: flex; align-items: center; gap: 0.75rem;">
               <span style="font-size: 1.5rem;">⚡</span>
               <div>
-                <strong style="color: #166534; font-size: 0.95rem; display: block;">المزامنة السحابية المباشرة نشطة</strong>
-                <span style="color: #15803d; font-size: 0.8rem;">يتم مزامنة أي مشتريات وتحديثات تلقائياً عبر السحابة في الوقت الفعلي.</span>
+                <strong style="color: #166534; font-size: 0.95rem; display: block;">المزامنة السحابية المباشرة
+                  نشطة</strong>
+                <span style="color: #15803d; font-size: 0.8rem;">يتم مزامنة أي مشتريات وتحديثات تلقائياً عبر السحابة في
+                  الوقت الفعلي.</span>
               </div>
             </div>
           </div>
-    <!-- Modal: Edit Item (تعديل بيانات الغرض: الاسم، الصورة، الكمية، الوحدة، الملاحظات) -->
-    <div id="modalEditItem" class="modal-backdrop" style="display: none;">
-      <div class="modal-window modal-edit-item-window">
-        <div class="modal-header">
-          <div class="modal-title-wrap">
-            <span class="modal-badge-icon">✏️</span>
-            <div>
-              <h3 class="modal-title">تعديل بيانات الغرض</h3>
-              <p class="modal-subtitle">تعديل الاسم والكمية والصورة والملاحظات</p>
+          <!-- Modal: Edit Item (تعديل بيانات الغرض: الاسم، الصورة، الكمية، الوحدة، الملاحظات) -->
+          <div id="modalEditItem" class="modal-backdrop" style="display: none;">
+            <div class="modal-window modal-edit-item-window">
+              <div class="modal-header">
+                <div class="modal-title-wrap">
+                  <span class="modal-badge-icon">✏️</span>
+                  <div>
+                    <h3 class="modal-title">تعديل بيانات الغرض</h3>
+                    <p class="modal-subtitle">تعديل الاسم والكمية والصورة والملاحظات</p>
+                  </div>
+                </div>
+                <button class="btn-close-modal" id="btnCloseEditItemModal">&times;</button>
+              </div>
+              <form id="formEditItemModal" class="modal-body edit-item-form-body">
+                <input type="hidden" id="editItemId" />
+
+                <div class="form-input-stacked">
+                  <label for="editItemName">اسم الغرض:</label>
+                  <input type="text" id="editItemName" class="form-input" required dir="auto"
+                    placeholder="اسم الغرض..." />
+                </div>
+
+                <div class="edit-qty-unit-grid">
+                  <div class="form-input-stacked">
+                    <label for="editItemQty">الكمية المطلوبة (العدد):</label>
+                    <div class="edit-stepper-control">
+                      <button type="button" class="stepper-btn" id="btnEditQtyMinus">−</button>
+                      <input type="number" id="editItemQty" class="form-input edit-qty-input" min="1" value="1" required
+                        dir="auto" />
+                      <button type="button" class="stepper-btn" id="btnEditQtyPlus">+</button>
+                    </div>
+                  </div>
+
+                  <div class="form-input-stacked">
+                    <label for="editItemUnit">الوحدة:</label>
+                    <input type="text" id="editItemUnit" class="form-input" placeholder="علبة / كيس / كجم..."
+                      dir="auto" />
+                  </div>
+                </div>
+
+                <div class="form-input-stacked">
+                  <label for="editItemNote">الملاحظات:</label>
+                  <input type="text" id="editItemNote" class="form-input" placeholder="ملاحظة أو ماركة مفضلة..."
+                    dir="auto" />
+                </div>
+
+                <!-- Item Image preview & options -->
+                <div class="form-input-stacked">
+                  <label>صورة الغرض:</label>
+                  <div class="edit-photo-panel">
+                    <div class="edit-photo-preview-wrap">
+                      <img id="editItemPreviewImg" src="" alt="معاينة الغرض" class="edit-photo-thumb"
+                        style="display:none;" />
+                      <div id="editItemNoPhoto" class="edit-no-photo-box">لا توجد صورة مرفقة</div>
+                    </div>
+                    <div class="edit-photo-actions">
+                      <label class="btn btn-secondary btn-sm" for="fileEditItemInput" title="اختيار صورة من الجهاز">
+                        📁 اختيار صورة
+                        <input type="file" id="fileEditItemInput" accept="image/*" style="display:none" />
+                      </label>
+                      <button type="button" id="btnLaunchCameraEdit" class="btn btn-secondary btn-sm"
+                        title="فتح الكاميرا لالتقاط صورة">
+                        📸 لقطة كاميرا
+                      </button>
+                      <button type="button" id="btnRemoveEditPhoto" class="btn btn-ghost btn-sm text-danger"
+                        title="حذف الصورة">
+                        🗑️ إزالة الصورة
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="modal-footer-actions">
+                  <button type="button" class="btn btn-secondary" id="btnCancelEditItem">إلغاء</button>
+                  <button type="submit" class="btn btn-accent btn-lg">
+                    <span>💾 حفظ التعديلات</span>
+                  </button>
+                </div>
+              </form>
             </div>
-          </div>
-          <button class="btn-close-modal" id="btnCloseEditItemModal">&times;</button>
-        </div>
-        <form id="formEditItemModal" class="modal-body edit-item-form-body">
-          <input type="hidden" id="editItemId" />
-
-          <div class="form-input-stacked">
-            <label for="editItemName">اسم الغرض:</label>
-            <input type="text" id="editItemName" class="form-input" required dir="auto" placeholder="اسم الغرض..." />
-          </div>
-
-          <div class="edit-qty-unit-grid">
-            <div class="form-input-stacked">
-              <label for="editItemQty">الكمية المطلوبة (العدد):</label>
-              <div class="edit-stepper-control">
-                <button type="button" class="stepper-btn" id="btnEditQtyMinus">−</button>
-                <input type="number" id="editItemQty" class="form-input edit-qty-input" min="1" value="1" required dir="auto" />
-                <button type="button" class="stepper-btn" id="btnEditQtyPlus">+</button>
+            <!-- Interactive Modal: Batch Image Uploading & Processing (Attractive Loader) -->
+            <div id="modalBatchLoading" class="modal-backdrop batch-loading-backdrop" style="display: none;">
+              <div class="modal-window batch-loading-window">
+                <div class="batch-loader-graphic">
+                  <div class="loader-pulse-ring"></div>
+                  <div class="loader-icon-center">📸</div>
+                </div>
+                <h3 id="batchLoadingTitle" class="batch-loading-title">جاري استلام وتجهيز الصور...</h3>
+                <p id="batchLoadingSubtitle" class="batch-loading-subtitle">يتم توزيع كل صورة تلقائياً على كارت مستقل مع
+                  شيك ليست وملاحظات</p>
+                <div class="batch-progress-bar-wrap">
+                  <div id="batchProgressBar" class="batch-progress-bar" style="width: 0%;"></div>
+                </div>
+                <div class="batch-loading-status" id="batchLoadingStatus">0 من 0 صورة</div>
               </div>
             </div>
-
-            <div class="form-input-stacked">
-              <label for="editItemUnit">الوحدة:</label>
-              <input type="text" id="editItemUnit" class="form-input" placeholder="علبة / كيس / كجم..." dir="auto" />
-            </div>
           </div>
 
-          <div class="form-input-stacked">
-            <label for="editItemNote">الملاحظات:</label>
-            <input type="text" id="editItemNote" class="form-input" placeholder="ملاحظة أو ماركة مفضلة..." dir="auto" />
-          </div>
-
-          <!-- Item Image preview & options -->
-          <div class="form-input-stacked">
-            <label>صورة الغرض:</label>
-            <div class="edit-photo-panel">
-              <div class="edit-photo-preview-wrap">
-                <img id="editItemPreviewImg" src="" alt="معاينة الغرض" class="edit-photo-thumb" style="display:none;" />
-                <div id="editItemNoPhoto" class="edit-no-photo-box">لا توجد صورة مرفقة</div>
-              </div>
-              <div class="edit-photo-actions">
-                <label class="btn btn-secondary btn-sm" for="fileEditItemInput" title="اختيار صورة من الجهاز">
-                  📁 اختيار صورة
-                  <input type="file" id="fileEditItemInput" accept="image/*" style="display:none" />
-                </label>
-                <button type="button" id="btnLaunchCameraEdit" class="btn btn-secondary btn-sm" title="فتح الكاميرا لالتقاط صورة">
-                  📸 لقطة كاميرا
-                </button>
-                <button type="button" id="btnRemoveEditPhoto" class="btn btn-ghost btn-sm text-danger" title="حذف الصورة">
-                  🗑️ إزالة الصورة
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div class="modal-footer-actions">
-            <button type="button" class="btn btn-secondary" id="btnCancelEditItem">إلغاء</button>
-            <button type="submit" class="btn btn-accent btn-lg">
-              <span>💾 حفظ التعديلات</span>
-            </button>
-          </div>
-        </form>
-      </div>
-    <!-- Interactive Modal: Batch Image Uploading & Processing (Attractive Loader) -->
-    <div id="modalBatchLoading" class="modal-backdrop batch-loading-backdrop" style="display: none;">
-      <div class="modal-window batch-loading-window">
-        <div class="batch-loader-graphic">
-          <div class="loader-pulse-ring"></div>
-          <div class="loader-icon-center">📸</div>
-        </div>
-        <h3 id="batchLoadingTitle" class="batch-loading-title">جاري استلام وتجهيز الصور...</h3>
-        <p id="batchLoadingSubtitle" class="batch-loading-subtitle">يتم توزيع كل صورة تلقائياً على كارت مستقل مع شيك ليست وملاحظات</p>
-        <div class="batch-progress-bar-wrap">
-          <div id="batchProgressBar" class="batch-progress-bar" style="width: 0%;"></div>
-        </div>
-        <div class="batch-loading-status" id="batchLoadingStatus">0 من 0 صورة</div>
-      </div>
-    </div>
-  </div>
-
-  <script type="module" src="/src/main.js"></script>
+          <script type="module" src="/src/main.js"></script>
 </body>
+
 </html>
